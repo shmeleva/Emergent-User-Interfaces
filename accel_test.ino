@@ -18,7 +18,7 @@
 */
 
 /* Set the delay between fresh samples */
-#define BNO055_SAMPLERATE_DELAY_MS (100)
+#define BNO055_SAMPLERATE_DELAY_MS (200)
 
 Adafruit_BNO055 bno = Adafruit_BNO055();
 
@@ -60,6 +60,11 @@ void setup(void)
     should go here)
 */
 /**************************************************************************/
+
+
+float movement[] = {0,0,0};
+boolean hasMovement = false;
+
 void loop(void)
 {
   // Possible vector values can be:
@@ -71,14 +76,43 @@ void loop(void)
   // - VECTOR_GRAVITY       - m/s^2
   imu::Vector<3> acc = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
 
+  
+
   /* Display the floating point data */
+  float movX = acc.x();
+  float movY = acc.y();
+  float movZ = acc.z();
   Serial.print("X: ");
-  Serial.print(acc.x());
+  Serial.print(movX);
   Serial.print(" Y: ");
-  Serial.print(acc.y());
+  Serial.print(movY);
   Serial.print(" Z: ");
-  Serial.print(acc.z());
-  Serial.print("\t\t");
+  Serial.print(movZ);
+  Serial.print("\t");
+
+  if(hasMovement && abs(movX)<0.15 && abs(movY)<0.15 && abs(movZ)<0.30){
+    hasMovement = false;
+    movement[0] = 0;
+    movement[1] = 0;
+    movement[2] = 0;
+    delay(3000);
+  }
+
+  if(0.15 < movX || movX < -0.15)movement[0] = movement[0] + abs(movX);
+  if(0.15 < movY || movY < -0.15)movement[1] = movement[1] + abs(movY);
+  if(0.30 < movZ || movZ< -0.30)movement[2] = movement[2] + abs(movZ);
+
+  if((movement[0] + movement[1] + movement[2]) > 5){
+    hasMovement = true; 
+  }
+
+  Serial.print("testi: ");
+  Serial.print(movement[0]);
+  Serial.print(" ");
+  Serial.print(movement[1]);
+  Serial.print(" ");
+  Serial.print(movement[2]);
+  Serial.print("\t");
 
 
   /* Display calibration status for each sensor. */
