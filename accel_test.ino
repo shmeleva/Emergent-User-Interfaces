@@ -18,7 +18,7 @@
 */
 
 /* Set the delay between fresh samples */
-#define BNO055_SAMPLERATE_DELAY_MS (200)
+#define BNO055_SAMPLERATE_DELAY_MS (100)
 
 Adafruit_BNO055 bno = Adafruit_BNO055();
 
@@ -64,6 +64,7 @@ void setup(void)
 
 float movement[] = {0,0,0};
 boolean hasMovement = false;
+int counter = 0;
 
 void loop(void)
 {
@@ -75,6 +76,7 @@ void loop(void)
   // - VECTOR_LINEARACCEL   - m/s^2
   // - VECTOR_GRAVITY       - m/s^2
   imu::Vector<3> acc = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
+ 
 
   
 
@@ -82,15 +84,31 @@ void loop(void)
   float movX = acc.x();
   float movY = acc.y();
   float movZ = acc.z();
-  Serial.print("X: ");
+  /*Serial.print("Acc X: ");
   Serial.print(movX);
   Serial.print(" Y: ");
   Serial.print(movY);
   Serial.print(" Z: ");
   Serial.print(movZ);
-  Serial.print("\t");
+  Serial.print("\t");*/
 
+  
+  //X = front, -X = back, Y = left, -Y = right, Z = up, -Z = down, 
+  //Checks if movement has ended
   if(hasMovement && abs(movX)<0.15 && abs(movY)<0.15 && abs(movZ)<0.30){
+    if(abs(movement[0])>abs(movement[1])&&abs(movement[0])>abs(movement[2])){
+      if(movement[0]>0)Serial.print("Front");
+      else Serial.print("Back");
+    }
+    else if(abs(movement[1])>abs(movement[2])){
+      if(movement[1]>0)Serial.print("Left");
+      else Serial.print("Right");
+    }
+    else{
+      if(movement[2]>0)Serial.print("Up");
+      else Serial.print("Down");
+    }
+    Serial.print("\t");
     hasMovement = false;
     movement[0] = 0;
     movement[1] = 0;
@@ -98,11 +116,22 @@ void loop(void)
     delay(3000);
   }
 
-  if(0.15 < movX || movX < -0.15)movement[0] = movement[0] + abs(movX);
-  if(0.15 < movY || movY < -0.15)movement[1] = movement[1] + abs(movY);
-  if(0.30 < movZ || movZ< -0.30)movement[2] = movement[2] + abs(movZ);
+  //Resets counter so movement wont be detected from static state over time
+  /*counter = counter + 1;
+  if(counter>10){
+    counter = 0;
+    movement[0] = 0;
+    movement[1] = 0;
+    movement[2] = 0;
+  }*/
 
-  if((movement[0] + movement[1] + movement[2]) > 5){
+  //Filters smaller movements
+  if(0.15 < movX || movX < -0.15)movement[0] = movement[0] + movX;
+  if(0.15 < movY || movY < -0.15)movement[1] = movement[1] + movY;
+  if(0.30 < movZ || movZ< -0.30)movement[2] = movement[2] + movZ;
+
+  //Checks if movement is large enough
+  if(abs(movement[0])> 1 || abs(movement[1]) > 1 || abs(movement[2]) > 1){
     hasMovement = true; 
   }
 
