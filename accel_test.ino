@@ -63,8 +63,12 @@ void setup(void)
 
 
 float movement[] = {0,0,0};
-boolean hasMovement = false;
-int counter = 0;
+//int counter = 0;
+float filterOne = 0.15;
+float filterTwo = 0.30;
+float movementVal = 1;
+boolean notDetermined = true;
+String direction = "";
 
 void loop(void)
 {
@@ -92,29 +96,61 @@ void loop(void)
   Serial.print(movZ);
   Serial.print("\t");*/
 
+  //Filters smaller movements
+  if(filterOne < movX || movX < - filterOne)movement[0] = movement[0] + movX;
+  if(filterOne < movY || movY < - filterOne)movement[1] = movement[1] + movY;
+  if(filterTwo < movZ || movZ< - filterTwo)movement[2] = movement[2] + movZ;
+
+  Serial.print("testi: ");
+  Serial.print(movement[0]);
+  Serial.print(" ");
+  Serial.print(movement[1]);
+  Serial.print(" ");
+  Serial.print(movement[2]);
+  Serial.print("\t");
   
-  //X = front, -X = back, Y = left, -Y = right, Z = up, -Z = down, 
+  //X = front, -X = back, Y = left, -Y = right, Z = up, -Z = down
+  //Tells which direction biggest movement is
+
+  if(notDetermined){
+    if(movement[0] > movementVal ){
+      direction = "Front";
+      notDetermined = false;
+    }
+    else if(movement[0] < -movementVal) {
+      direction = "Back";
+      notDetermined = false;
+    }
+    else if(movement[1] > movementVal ){
+      direction = "Left";
+      notDetermined = false;
+    }
+    else if(movement[1] < -movementVal) {
+      direction = "Right";
+      notDetermined = false;
+    }
+    else if(movement[2] > movementVal ){
+      direction = "Down";
+      notDetermined = false;
+    }
+    else if(movement[2] < -movementVal) {
+      direction = "Up";
+      notDetermined = false;
+    }
+  }
   //Checks if movement has ended
-  if(hasMovement && abs(movX)<0.15 && abs(movY)<0.15 && abs(movZ)<0.30){
-    if(abs(movement[0])>abs(movement[1])&&abs(movement[0])>abs(movement[2])){
-      if(movement[0]>0)Serial.print("Front");
-      else Serial.print("Back");
-    }
-    else if(abs(movement[1])>abs(movement[2])){
-      if(movement[1]>0)Serial.print("Left");
-      else Serial.print("Right");
-    }
-    else{
-      if(movement[2]>0)Serial.print("Up");
-      else Serial.print("Down");
-    }
+  if(notDetermined == false && abs(movX)<0.15 && abs(movY)<0.15 && abs(movZ)<0.30){
+    Serial.print(direction);
     Serial.print("\t");
-    hasMovement = false;
     movement[0] = 0;
     movement[1] = 0;
     movement[2] = 0;
+    direction = "";
+    notDetermined = true;
     delay(3000);
-  }
+    }
+
+ 
 
   //Resets counter so movement wont be detected from static state over time
   /*counter = counter + 1;
@@ -125,23 +161,6 @@ void loop(void)
     movement[2] = 0;
   }*/
 
-  //Filters smaller movements
-  if(0.15 < movX || movX < -0.15)movement[0] = movement[0] + movX;
-  if(0.15 < movY || movY < -0.15)movement[1] = movement[1] + movY;
-  if(0.30 < movZ || movZ< -0.30)movement[2] = movement[2] + movZ;
-
-  //Checks if movement is large enough
-  if(abs(movement[0])> 1 || abs(movement[1]) > 1 || abs(movement[2]) > 1){
-    hasMovement = true; 
-  }
-
-  Serial.print("testi: ");
-  Serial.print(movement[0]);
-  Serial.print(" ");
-  Serial.print(movement[1]);
-  Serial.print(" ");
-  Serial.print(movement[2]);
-  Serial.print("\t");
 
 
   /* Display calibration status for each sensor. */
