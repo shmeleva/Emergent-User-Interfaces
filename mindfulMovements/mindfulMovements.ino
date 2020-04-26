@@ -169,7 +169,7 @@ void setNextDirection() {
 void giveMovementInstruction() {
   
   /* Setting the LEDs for giving the movement instructions */
-  if (directionDetermined == true && instructionsGiven == false) {
+  if (instructionsGiven == false) {
 
     if (next_movement == 0) {
       analogWrite(blue_light_pin_0, brightness);
