@@ -67,7 +67,7 @@ int directionInt = -1;
 bool directionDone = true;
 
 // Parameters for MOVEMENT INSTRUCTIONS AND FEEDBACK
-bool insGiven = false;
+bool instructionsGiven = false;
 bool feedGiven = false;
 
 //directional instuctions
@@ -80,16 +80,57 @@ int next_movement = -1;
 int axis = -1;
 int temp = -1;
 
+// -----------------------------------------------------------------------
 
-/* FUNCTION:  accelFunc()
- *
- *  function for accelerometer – input and instructions
- *
-*/
-void accelFunc(){
+void setup(void)
+{
+  /* initialize the pushbutton pin as an input:*/
+  pinMode(buttonPin, INPUT);
 
-  /* Set next direction for movement instructions */
-  if (directionDone) {
+  /* initialize the LED lights: 4 RGB LEDs, using 2 of the colors (2 pins/LED)*/
+  pinMode(green_light_pin_0, OUTPUT);
+  pinMode(blue_light_pin_0, OUTPUT);
+  pinMode(green_light_pin_1, OUTPUT);
+  pinMode(blue_light_pin_1, OUTPUT);
+  pinMode(green_light_pin_2, OUTPUT);
+  pinMode(blue_light_pin_2, OUTPUT);
+  pinMode(green_light_pin_3, OUTPUT);
+  pinMode(blue_light_pin_3, OUTPUT);
+
+  // Printing accelerometer status and data on monitor:
+  
+  Serial.begin(9600);
+  Serial.println("Accel Sensor Raw Data Test"); Serial.println("");
+
+  /* Initialise the accelerometer*/
+  if(!bno.begin())
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while(1);
+  }
+
+  delay(1000);
+
+  /* Display the current temperature */
+  int8_t temp = bno.getTemp();
+  Serial.print("Current Temperature: ");
+  Serial.print(temp);
+  Serial.println(" C");
+  Serial.println("");
+
+  bno.setExtCrystalUse(true);
+
+  Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
+}
+
+/* FUNCTION:  setNextDirection()
+ *  
+ *  Set the direction for next movement.
+ *  
+ *  req: directionDone = true
+ */
+void setNextDirection() {
 
     axis = rand() % 2; // Pick random axis
 
@@ -109,26 +150,46 @@ void accelFunc(){
       prev_y = next_y;
       next_y = temp;
     }
+    
     directionDone = false;
-  }
+}
 
+/* FUNCTION:  giveMovementInstruction();
+ *  
+ *  Function to set the next movement instruction.
+ *  
+ *  req = directionDone = false
+ *  req = directionDetermined == true
+ *  req = instructionsGiven == false
+*/
+void giveMovementInstruction() {
+  
   /* Setting the LEDs for giving the movement instructions */
-  if (directionDone == false && directionDetermined == true && insGiven == false) {
+  if (directionDetermined == true && instructionsGiven == false) {
 
-    if(next_movement == 0){
+    if (next_movement == 0) {
       analogWrite(blue_light_pin_0, brightness);
     }
-    else if(next_movement == 1){
+    else if (next_movement == 1) {
       analogWrite(blue_light_pin_1, brightness);
     }
-    else if(next_movement == 2){
+    else if (next_movement == 2) {
       analogWrite(blue_light_pin_2, brightness);
     }
-    else if(next_movement == 3){
+    else if (next_movement == 3) {
       analogWrite(blue_light_pin_3, brightness);
     }
-    insGiven == true;
+    instructionsGiven == true;
   }
+  
+}
+
+/* FUNCTION:  readMovementInput()
+ *
+ *  function for accelerometer – input and instructions
+ *
+*/
+void readMovementInput(){
 
   /* Receiving movement data from accelerometer */
   imu::Vector<3> acc = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
@@ -175,93 +236,6 @@ void accelFunc(){
       directionInt = 0;
       directionDetermined = true;
     }
-
-    /* Check if movement is same as instructed */
-    if (directionDetermined == true && feedGiven == false) {
-
-      Serial.print("Intended direction: ");
-      Serial.print(next_movement);
-      Serial.print(" Actual movement: ");
-      Serial.print(directionInt);
-      
-      if(next_movement == directionInt) {
-
-        /* Movement is correct. Set LED colour green. */
-
-        Serial.print(" movement is correct");
-
-        if (next_movement == 0) {
-         analogWrite(green_light_pin_0, brightness);
-         analogWrite(blue_light_pin_0, 0);
-        }
-        else if (next_movement == 1) {
-          analogWrite(green_light_pin_1, brightness);
-          analogWrite(blue_light_pin_1, 0);
-        }
-        else if (next_movement == 2) {
-         analogWrite(green_light_pin_2, brightness);
-         analogWrite(blue_light_pin_2, 0);
-        }
-        else if (next_movement == 3) {
-         analogWrite(green_light_pin_3, brightness);
-         analogWrite(blue_light_pin_3, 0);
-        }
-
-      }
-      
-      else if ((next_movement == 0 || next_movement == 1) && (directionInt == 0 || directionInt == 1)){
-
-        /* Movement is semi-correct. Set the LED color green. */
-
-        Serial.print(" movement is semi-correct");
-
-        if (next_movement == 0) {
-         analogWrite(green_light_pin_0, brightness);
-         analogWrite(blue_light_pin_0, 0);
-        }
-        else if (next_movement == 1) {
-          analogWrite(green_light_pin_1, brightness);
-          analogWrite(blue_light_pin_1, 0);
-        }
-        else if (next_movement == 2) {
-         analogWrite(green_light_pin_2, brightness);
-         analogWrite(blue_light_pin_2, 0);
-        }
-        else if (next_movement == 3) {
-         analogWrite(green_light_pin_3, brightness);
-         analogWrite(blue_light_pin_3, 0);
-        }
-
-      }
-
-      else if ((next_movement == 2 || next_movement == 3) && (directionInt == 2 || directionInt == 3)) {
-        //movement is semi-correct, green light
-        Serial.print(" movement is semi-correct");
-        if (next_movement == 0) {
-         analogWrite(green_light_pin_0, brightness);
-         analogWrite(blue_light_pin_0, 0); // Zero blue color
-        }
-        else if (next_movement == 1) {
-          analogWrite(green_light_pin_1, brightness);
-          analogWrite(blue_light_pin_1, 0); // Zero blue color
-        }
-        else if (next_movement == 2) {
-         analogWrite(green_light_pin_2, brightness);
-         analogWrite(blue_light_pin_2, 0); // Zero blue color
-        }
-        else if (next_movement == 3) {
-         analogWrite(green_light_pin_3, brightness);
-         analogWrite(blue_light_pin_3, 0); // Zero blue color
-        }
-      }
-      else {
-        //movement is wrong, keep blue light
-        Serial.print(" movement is wrong");
-      }
-      feedGiven = true;
-      Serial.print("\t");
-
-    }
   }
 
   /* Display calibration status for each sensor. */
@@ -278,6 +252,104 @@ void accelFunc(){
 
 }
 
+/*  FUNCTION  giveMovementFeedback()
+ *   
+ *  Give feedback based on the instructions and user's movement.
+ *  
+ *  req:  directionDetermined = true
+ *  req:  feedbackGiven = false
+*/
+void giveMovementFeedback() {
+
+  Serial.print("Intended direction: ");
+  Serial.print(next_movement);
+  Serial.print(" Actual movement: ");
+  Serial.print(directionInt);
+
+  // MOVEMENT CORRECT
+  if (next_movement == directionInt) {
+
+    /* Movement is correct. Set LED colour green. */
+
+    Serial.print(" movement is correct");
+
+    if (next_movement == 0) {
+     analogWrite(green_light_pin_0, brightness);
+     analogWrite(blue_light_pin_0, 0);
+    }
+    else if (next_movement == 1) {
+      analogWrite(green_light_pin_1, brightness);
+      analogWrite(blue_light_pin_1, 0);
+    }
+    else if (next_movement == 2) {
+     analogWrite(green_light_pin_2, brightness);
+     analogWrite(blue_light_pin_2, 0);
+    }
+    else if (next_movement == 3) {
+     analogWrite(green_light_pin_3, brightness);
+     analogWrite(blue_light_pin_3, 0);
+    }
+
+  }
+
+  // MOVEMENT SEMI-CORRECT 1/2
+  else if ((next_movement == 0 || next_movement == 1) && (directionInt == 0 || directionInt == 1)) {
+
+    /* Movement is semi-correct. Set the LED color green. */
+
+    Serial.print(" movement is semi-correct");
+
+    if (next_movement == 0) {
+     analogWrite(green_light_pin_0, brightness);
+     analogWrite(blue_light_pin_0, 0);
+    }
+    else if (next_movement == 1) {
+      analogWrite(green_light_pin_1, brightness);
+      analogWrite(blue_light_pin_1, 0);
+    }
+    else if (next_movement == 2) {
+     analogWrite(green_light_pin_2, brightness);
+     analogWrite(blue_light_pin_2, 0);
+    }
+    else if (next_movement == 3) {
+     analogWrite(green_light_pin_3, brightness);
+     analogWrite(blue_light_pin_3, 0);
+    }
+
+  }
+
+  // MOVEMENT SEMI-CORRECT 2/2
+  else if ((next_movement == 2 || next_movement == 3) && (directionInt == 2 || directionInt == 3)) {
+    //movement is semi-correct, green light
+    Serial.print(" movement is semi-correct");
+    if (next_movement == 0) {
+     analogWrite(green_light_pin_0, brightness);
+     analogWrite(blue_light_pin_0, 0); // Zero blue color
+    }
+    else if (next_movement == 1) {
+      analogWrite(green_light_pin_1, brightness);
+      analogWrite(blue_light_pin_1, 0); // Zero blue color
+    }
+    else if (next_movement == 2) {
+     analogWrite(green_light_pin_2, brightness);
+     analogWrite(blue_light_pin_2, 0); // Zero blue color
+    }
+    else if (next_movement == 3) {
+     analogWrite(green_light_pin_3, brightness);
+     analogWrite(blue_light_pin_3, 0); // Zero blue color
+    }
+  }
+
+  // MOVEMENT WRONG
+  else {
+    //movement is wrong, keep blue light
+    Serial.print(" movement is wrong");
+  }
+  
+  feedGiven = true; // TODO: take off?
+  Serial.print("\t");
+}
+
 /* FUNCTION movementDone()
  *
  *  function to control movement instructions after a movement is finished
@@ -291,7 +363,7 @@ void movementDone() {
   direction = "";
   directionDetermined = false;
   directionDone = true;
-  insGiven = false;
+  instructionsGiven = false;
   feedGiven = false;
 
   /* Set all LEDs off. */
@@ -305,46 +377,30 @@ void movementDone() {
   analogWrite(blue_light_pin_3, 0);
        
 }
-void setup(void)
-{
-  /* initialize the pushbutton pin as an input:*/
-  pinMode(buttonPin, INPUT);
 
-  /* initialize the LED lights: 4 RGB LEDs, using 2 of the colors (2 pins/LED)*/
-  pinMode(green_light_pin_0, OUTPUT);
-  pinMode(blue_light_pin_0, OUTPUT);
-  pinMode(green_light_pin_1, OUTPUT);
-  pinMode(blue_light_pin_1, OUTPUT);
-  pinMode(green_light_pin_2, OUTPUT);
-  pinMode(blue_light_pin_2, OUTPUT);
-  pinMode(green_light_pin_3, OUTPUT);
-  pinMode(blue_light_pin_3, OUTPUT);
-
-  // Printing accelerometer status and data on monitor:
+/*  FUNCTION  movementLoop()
+ *   
+ *   The event loop for 
+ *   giving movement instructions,
+ *   reading movement input, 
+ *   and giving feedback based on actual movement.
+*/
+void movementLoop() {
   
-  Serial.begin(9600);
-  Serial.println("Accel Sensor Raw Data Test"); Serial.println("");
-
-  /* Initialise the accelerometer*/
-  if(!bno.begin())
-  {
-    /* There was a problem detecting the BNO055 ... check your connections */
-    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1);
+  if (directionDone) {
+    setNextDirection();
   }
 
-  delay(1000);
+  if (!directionDone) {
+    giveMovementInstruction();
+  }
 
-  /* Display the current temperature */
-  int8_t temp = bno.getTemp();
-  Serial.print("Current Temperature: ");
-  Serial.print(temp);
-  Serial.println(" C");
-  Serial.println("");
+  readMovementInput();
+  
+  if (directionDetermined == true && feedGiven == false) {  // TODO: take off feedGiven?
+    giveMovementFeedback();
+  }
 
-  bno.setExtCrystalUse(true);
-
-  Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
 }
 
 /* MAIN
@@ -360,70 +416,53 @@ void loop() {
     else buttonStatus = true;
     delay(1000);
   }
-  if(buttonStatus){
-    
-    /*  For loop, controls the breathing instructions and movement instructions during inhale. 
-     *  During each round, the frequency level of thevibration motor is set higher, 
-     *  according to fadeStep value.
-    */
-    for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
-
-      // Set the vibration frequency value for current loop
-      analogWrite(vibration_motor, fadeValue);
-
-      // movement instructions and movement input
-      accelFunc();
   
-      buttonState = digitalRead(buttonPin);
+  if (buttonStatus) {
+    
+    for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
+      
+      analogWrite(vibration_motor, fadeValue);
+      movementLoop();
+      delay(100); /* Changing this will affect the respiratory rate*/
 
-      //Checks if button is pressed
+      buttonState = digitalRead(buttonPin);
       if (buttonState == HIGH) {
         if(buttonStatus == true) {
           buttonStatus = false;
           break;
         }
       }
-
-      // sets how long delay is betweeen the frequency changes 
-      // ! Changing this will affect the respiratory rate
-      delay(100);
+      
     }
-
+    
     movementDone();
-
   }
 
-  if(buttonStatus){
+  if (buttonStatus) {
     
     // Stop for a while during the peak before exhale instructions start
     analogWrite(vibration_motor, 0);
 
     delay(pause);
 
-    /* For loop, controls the breathing instructions and movement instructions during exhale. */
-    // fade out from max to min in increments of 5 points:
     for (int fadeValue = 255; fadeValue >= minFrq; fadeValue -= fadeStep) {
 
-      // sets the value (range from 0 to 255):
       analogWrite(vibration_motor, fadeValue);
+      movementLoop();
+      delay(100); /* Changing this will affect the respiratory rate*/
 
-      accelFunc();
-
+      
       buttonState = digitalRead(buttonPin);
-      if(buttonState == HIGH){//Checks if button is pressed
-        if(buttonStatus == true){
+      if (buttonState == HIGH) {
+        if(buttonStatus == true) {
           buttonStatus = false;
           break;
         }
       }
-
-      // sets how long delay is betweeen the frequency changes 
-      // ! Changing this will affect the respiratory rate
-      delay(100);
+      
     }
-
+    
+    movementDone();
   }
-  
-  movementDone();
   
 }
