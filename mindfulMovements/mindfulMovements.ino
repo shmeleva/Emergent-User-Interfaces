@@ -403,19 +403,30 @@ void movementLoop() {
 
 }
 
+/*  FUNCTION  buttonPressed() */
+
+void checkButton() {
+  
+  buttonState = digitalRead(buttonPin);
+  
+  if (buttonState == HIGH) {
+    
+    if (buttonStatus == true) {
+      buttonStatus = false;
+    }
+    else {
+      buttonStatus = true;
+    }
+  }
+}
+
 /* MAIN
  *
 */
 void loop() {
 
-  // read the state of the pushbutton value:
-  buttonState = digitalRead(buttonPin);
-
-  if(buttonState == HIGH){
-    if(buttonStatus == true)buttonStatus = false;
-    else buttonStatus = true;
-    delay(1000);
-  }
+  checkButton();
+  if (buttonState == HIGH) delay(1000);
   
   if (buttonStatus) {
     
@@ -424,17 +435,11 @@ void loop() {
       analogWrite(vibration_motor, fadeValue);
       movementLoop();
       delay(100); /* Changing this will affect the respiratory rate*/
-
-      buttonState = digitalRead(buttonPin);
-      if (buttonState == HIGH) {
-        if(buttonStatus == true) {
-          buttonStatus = false;
-          break;
-        }
-      }
+      checkButton();
+      if (buttonStatus == false) break;
       
     }
-    
+
     movementDone();
   }
 
@@ -442,7 +447,6 @@ void loop() {
     
     // Stop for a while during the peak before exhale instructions start
     analogWrite(vibration_motor, 0);
-
     delay(pause);
 
     for (int fadeValue = 255; fadeValue >= minFrq; fadeValue -= fadeStep) {
@@ -450,18 +454,11 @@ void loop() {
       analogWrite(vibration_motor, fadeValue);
       movementLoop();
       delay(100); /* Changing this will affect the respiratory rate*/
-
-      
-      buttonState = digitalRead(buttonPin);
-      if (buttonState == HIGH) {
-        if(buttonStatus == true) {
-          buttonStatus = false;
-          break;
-        }
-      }
+      checkButton();
+      if (buttonStatus == false) break;
       
     }
-    
+
     movementDone();
   }
   
