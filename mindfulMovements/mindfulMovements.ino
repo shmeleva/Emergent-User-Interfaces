@@ -14,18 +14,26 @@ const int vibration_motor = 11;  // Vibration motor, pin 9
 Adafruit_BNO055 bno = Adafruit_BNO055();
 
 // ----------- LED LIGHTS -----------------
-const int green_light_pin_0 = 2; // non PWM
+
+// Up
+const int green_light_pin_0 = 2; // non PWM pin
 const int blue_light_pin_0 = 4;
 
-const int green_light_pin_1 = 3; // non PWM
+// Down
+const int green_light_pin_1 = 3; // non PWM pin
 const int blue_light_pin_1 = 6;
 
+// Right
 const int green_light_pin_2 = 5;
-const int blue_light_pin_2 = 7; // non PWM
+const int blue_light_pin_2 = 7; // non PWM pin
 
+// Left
 const int green_light_pin_3 = 9;
 const int blue_light_pin_3 = 10;
 
+/*  Some of the LEDs are not in the PWM pins. (Not enough of them for this use).
+ *  Thus we cannot use other values than HIGH (255) or LOW (0)
+*/
 const int brightness = 255; // Comfrotable value for brightness to use with the LEDs
 
 // ----------- BUTTON ---------------------
@@ -161,19 +169,20 @@ void setNextDirection() {
 
     if (instructedDirection == 0) {
       directionOutput = "Up";
-      
+
     } else if (instructedDirection == 1) {
       directionOutput = "Down";
-      
+
     } else if (instructedDirection == 2) {
       directionOutput = "Right";
-      
+
     } else if (instructedDirection == 3) {
       directionOutput = "Left";
+
     } else {
       directionOutput = "";
     }
-    
+
     Serial.println("Next movement set: "); Serial.println(directionOutput);
 }
 
@@ -182,8 +191,7 @@ void setNextDirection() {
  *  Function to set the next movement instruction.
  *  
  *  req = directionDone = false
- *  req = directionDetermined == true
- *  req = instructionsGiven == false
+ *  req = instructionsGiven = false
 */
 void giveMovementInstruction() {
   
@@ -268,9 +276,9 @@ void readMovementInput(){
   }
 
   /* Display calibration status for each sensor. */
-  uint8_t system, gyro, accel, mag = 0;
+  /*uint8_t system, gyro, accel, mag = 0;
   bno.getCalibration(&system, &gyro, &accel, &mag);
-  /*Serial.print("CALIBRATION: Sys=");
+  Serial.print("CALIBRATION: Sys=");
   Serial.print(system, DEC);
   Serial.print(" Gyro=");
   Serial.print(gyro, DEC);
@@ -283,8 +291,6 @@ void readMovementInput(){
 
 /* Set green LEDs */
 void correctMovementFeedback() {
-
-    // Our lights are not in the PWM pins and thus some of them cannot use the different brightness level
   
     if (instructedDirection == 0) {
       analogWrite(green_light_pin_0, brightness);
@@ -348,20 +354,20 @@ void giveMovementFeedback() {
     correctMovementFeedback();
   }
 
-  // Semi-correct: right axis
+  // Semi-correct: correct axis
   else if ((instructedDirection == 0 || instructedDirection == 1) && (userDirection == 0 || userDirection == 1)) {
 
     /* Movement is semi-correct. Set LED colour green. */
     Serial.print("movement is semi-correct.");
-    correctMovementFeedback();
+    correctMovementFeedback(); // using this since only 2/3 colours in use.
   }
 
-  // Semi-correct: right axis
+  // Semi-correct: correct axis
   else if ((instructedDirection == 2 || instructedDirection == 3) && (userDirection == 2 || userDirection == 3)) {
 
     /* Movement is semi-correct. Set LED colour green. */
     Serial.print("movement is semi-correct.");
-    correctMovementFeedback();
+    correctMovementFeedback(); // using this since only 2/3 colours in use.
   }
   else {
     
@@ -371,7 +377,7 @@ void giveMovementFeedback() {
   }
   
   feedGiven = true; // TODO: take off?
-  Serial.print("\t");
+  Serial.print("");
 }
 
 /* FUNCTION movementDone()
@@ -405,9 +411,9 @@ void movementDone() {
 /*  FUNCTION  movementLoop()
  *   
  *   The event loop for 
- *   giving movement instructions,
- *   reading movement input, 
- *   and giving feedback based on actual movement.
+ *   1 giving movement instructions,
+ *   2 reading movement input,
+ *   3 and giving feedback based on actual movement.
 */
 void movementLoop() {
   
@@ -427,7 +433,11 @@ void movementLoop() {
 
 }
 
-/*  FUNCTION  buttonPressed() */
+/*   FUNCTION  checkButton()
+ *
+ *   Checks whether button is being pressed
+ *   and updates the buttonStatus value.
+*/
 
 void checkButton() {
 
@@ -456,6 +466,8 @@ void loop() {
   if (startOfExercise && buttonStatus) {
     Serial.print("Starting exercise."); Serial.println("");
     startOfExercise = false;
+
+    // TODO: breathing-only-phase here
   }
   
   if (buttonStatus) {
