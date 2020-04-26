@@ -408,6 +408,58 @@ void movementDone() {
        
 }
 
+/*  FUNCTION  endVisualization()
+ *
+ *   Creates a visualization in the end of the exercise with the LEDs.
+*/
+void endVisualization() {
+  // do some fancy blinking/circle/etc. here.
+
+  // top
+  analogWrite(blue_light_pin_0, HIGH);
+  delay(500);
+
+  // right
+  analogWrite(blue_light_pin_2, HIGH);
+  analogWrite(blue_light_pin_0, LOW);
+  delay(500);
+
+  // bottom
+  analogWrite(blue_light_pin_1, HIGH);
+  analogWrite(blue_light_pin_2, LOW);
+  delay(500);
+
+  // left
+  analogWrite(blue_light_pin_3, HIGH);
+  analogWrite(blue_light_pin_1, LOW);
+  delay(500);
+
+  /* greens*/
+
+  // top
+  analogWrite(green_light_pin_0, HIGH);
+  analogWrite(blue_light_pin_3, LOW);
+  delay(500);
+
+  // right
+  analogWrite(green_light_pin_2, HIGH);
+  analogWrite(green_light_pin_0, LOW);
+  delay(500);
+
+  // bottom
+  analogWrite(green_light_pin_1, HIGH);
+  analogWrite(green_light_pin_2, LOW);
+  delay(500);
+
+  // left
+  analogWrite(green_light_pin_3, HIGH);
+  analogWrite(green_light_pin_1, LOW);
+  delay(500);
+
+  analogWrite(green_light_pin_3, LOW);
+
+}
+
 /*  FUNCTION  movementLoop()
  *   
  *   The event loop for 
@@ -480,9 +532,10 @@ void loop() {
       checkButton();
       if (buttonStatus == false) {
         analogWrite(vibration_motor, 0);
+        endVisualization();
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
-      
+
     }
 
     movementDone();
@@ -502,12 +555,17 @@ void loop() {
       checkButton();
       if (buttonStatus == false) {
         analogWrite(vibration_motor, 0);
+        endVisualization();
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
-      
+
     }
 
     movementDone();
   }
+
+  // TODO: implement a timer to stop the movement exercise after some time according to a variable 
+  // (we can set it for testing purposes for different lengths, e.g. 3 or 10 minutes).
+  // After that, do "end visualization".
   
 }
