@@ -4,6 +4,8 @@
 #include <utility/imumaths.h>
 
 
+int startOfExercise= true;
+
 // ----------- VIBRATION MOTORS -----------
 
 const int vibration_motor = 11;  // Vibration motor, pin 9
@@ -65,7 +67,8 @@ float filterOne = 0.2;  //filters for movement Y
 float filterTwo = 0.4;  //filters for movement Z
 float movementVal = 1;  //filter for total amount for movement to be determined
 boolean directionDetermined = false;
-String direction = "";
+String directionInput = "";
+String directionOutput = "";
 int userDirection = -1;
 bool directionDone = true;
 
@@ -74,10 +77,10 @@ bool instructionsGiven = false;
 bool feedGiven = false;
 
 //directional instuctions
-int next_z = 0;
-int prev_z = 1;
-int next_y = 2;
-int prev_y = 3;
+int next_z = 0; // up
+int prev_z = 1; // down
+int next_y = 2; // right
+int prev_y = 3; // left
   
 int instructedDirection = -1;
 int axis = -1;
@@ -155,7 +158,23 @@ void setNextDirection() {
     }
     
     directionDone = false;
-    Serial.println("Next movement set.");
+
+    if (instructedDirection == 0) {
+      directionOutput = "Up";
+      
+    } else if (instructedDirection == 1) {
+      directionOutput = "Down";
+      
+    } else if (instructedDirection == 2) {
+      directionOutput = "Right";
+      
+    } else if (instructedDirection == 3) {
+      directionOutput = "Left";
+    } else {
+      directionOutput = "";
+    }
+    
+    Serial.println("Next movement set: "); Serial.println(directionOutput);
 }
 
 /* FUNCTION:  giveMovementInstruction();
@@ -214,37 +233,37 @@ void readMovementInput(){
   /*  Determine the movement direction to give feedback for
    *  Y = left, -Y = right, Z = up, -Z = down
   */
-  if (!directionDetermined) {
+  if (!directionDetermined) {   // TODO: take this restriction away. now it only detects the movement in the very beginning of movement, which is often wrong.
 
     if(movement[1] > movementVal ) {
-      direction = "Left";
+      directionInput = "Left";
       userDirection = 3;
       directionDetermined = true;
       Serial.println("Moving left.");
     }
     else if(movement[1] < -movementVal) {
-      direction = "Right";
+      directionInput = "Right";
       userDirection = 2;
       directionDetermined = true;
       Serial.println("Moving right.");
     }
     else if(movement[2] > movementVal ) {
-      direction = "Down";
+      directionInput = "Down";
       userDirection = 1;
       directionDetermined = true;
       Serial.println("Moving down.");
     }
     else if(movement[2] < -movementVal) {
-      direction = "Up";
+      directionInput = "Up";
       userDirection = 0;
       directionDetermined = true;
       Serial.println("Moving up.");
     }
     else {
-      direction = "N";
+      directionInput = "";
       userDirection = -1;
       directionDetermined = false;
-      Serial.println("Could not determine direction.");
+      //Serial.println("Could not determine direction.");
     }
   }
 
@@ -315,16 +334,17 @@ void neutralMovementFeedback() {
 */
 void giveMovementFeedback() {
 
-  Serial.print("Intended direction: ");
-  Serial.print(instructedDirection);
-  Serial.print(" Actual movement: ");
-  Serial.print(userDirection);
-
+  Serial.print("Intended direction:"); 
+  Serial.print(instructedDirection); Serial.print("");
+  Serial.print("Actual movement:");
+  Serial.print(userDirection); Serial.print("");
+  Serial.print("Feedback: ");
+  
   // MOVEMENT CORRECT
   if (instructedDirection == userDirection) {
 
     /* Movement is correct. Set LED colour green. */
-    Serial.print(" movement is correct");
+    Serial.print("movement is correct.");
     correctMovementFeedback();
   }
 
@@ -332,7 +352,7 @@ void giveMovementFeedback() {
   else if ((instructedDirection == 0 || instructedDirection == 1) && (userDirection == 0 || userDirection == 1)) {
 
     /* Movement is semi-correct. Set LED colour green. */
-    Serial.print(" movement is semi-correct");
+    Serial.print("movement is semi-correct.");
     correctMovementFeedback();
   }
 
@@ -340,13 +360,13 @@ void giveMovementFeedback() {
   else if ((instructedDirection == 2 || instructedDirection == 3) && (userDirection == 2 || userDirection == 3)) {
 
     /* Movement is semi-correct. Set LED colour green. */
-    Serial.print(" movement is semi-correct");
+    Serial.print("movement is semi-correct.");
     correctMovementFeedback();
   }
   else {
     
     /* Movement is wrong. Set LED colour blue. */
-    Serial.print(" movement is wrong");
+    Serial.print("movement is wrong.");
     neutralMovementFeedback();
   }
   
@@ -364,7 +384,7 @@ void movementDone() {
   movement[0] = 0;
   movement[1] = 0;
   movement[2] = 0;
-  direction = "";
+  directionInput = "";
   directionDetermined = false;
   directionDone = true;
   instructionsGiven = false;
@@ -411,10 +431,13 @@ void movementLoop() {
 
 void checkButton() {
 
-  buttonState = digitalRead(buttonPin);
-
+  buttonState = digitalRead(buttonPin); // Result will be HIGH during when button is physically pressed down
   if (buttonState == HIGH) {
-
+    /* Wait after button click was detected so we dont keep reading the same button click again. 
+     *  This delay does not matter because the button press will always have an effect on the exercise 
+     *  -> it will be stopped or it is only starting.
+    */
+    delay(1000);
     if (buttonStatus == true) {
       buttonStatus = false;
     }
@@ -430,7 +453,10 @@ void checkButton() {
 void loop() {
 
   checkButton();
-  if (buttonState == HIGH) delay(1000);
+  if (startOfExercise && buttonStatus) {
+    Serial.print("Starting exercise."); Serial.println("");
+    startOfExercise = false;
+  }
   
   if (buttonStatus) {
     
@@ -440,7 +466,10 @@ void loop() {
       movementLoop();
       delay(100); /* Changing this will affect the respiratory rate*/
       checkButton();
-      if (buttonStatus == false) break;
+      if (buttonStatus == false) {
+        analogWrite(vibration_motor, 0);
+        break; // if button press is detected, stopping the exercise middle of breathing instructions
+      }
       
     }
 
@@ -459,7 +488,10 @@ void loop() {
       movementLoop();
       delay(100); /* Changing this will affect the respiratory rate*/
       checkButton();
-      if (buttonStatus == false) break;
+      if (buttonStatus == false) {
+        analogWrite(vibration_motor, 0);
+        break; // if button press is detected, stopping the exercise middle of breathing instructions
+      }
       
     }
 
