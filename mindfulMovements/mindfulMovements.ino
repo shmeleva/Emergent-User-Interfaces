@@ -6,25 +6,28 @@
 
 // ----------- VIBRATION MOTORS -----------
 
-const int vibration_motor = 9;  // Vibration motor, pin 9
+const int vibration_motor = 11;  // Vibration motor, pin 9
 
 // ----------- ACCELEROMETER --------------
 Adafruit_BNO055 bno = Adafruit_BNO055();
 
 // ----------- LED LIGHTS -----------------
-const int green_light_pin_0 = 11;
-const int blue_light_pin_0 = 10;
-const int green_light_pin_1 = 9;
-const int blue_light_pin_1 = 8;
-const int green_light_pin_2 = 7;
-const int blue_light_pin_2 = 6;
-const int green_light_pin_3 = 5;
-const int blue_light_pin_3 = 4;
+const int green_light_pin_0 = 2; // non PWM
+const int blue_light_pin_0 = 4;
 
-const int brightness = 50; // Comfrotable value for brightness to use with the LEDs
+const int green_light_pin_1 = 3; // non PWM
+const int blue_light_pin_1 = 6;
+
+const int green_light_pin_2 = 5;
+const int blue_light_pin_2 = 7; // non PWM
+
+const int green_light_pin_3 = 9;
+const int blue_light_pin_3 = 10;
+
+const int brightness = 255; // Comfrotable value for brightness to use with the LEDs
 
 // ----------- BUTTON ---------------------
-const int buttonPin = 2; 
+const int buttonPin = 12; 
 int buttonState = 0;
 bool buttonStatus = false;
 
@@ -114,10 +117,10 @@ void setup(void)
 
   /* Display the current temperature */
   int8_t temp = bno.getTemp();
-  Serial.print("Current Temperature: ");
+  /*Serial.print("Current Temperature: ");
   Serial.print(temp);
   Serial.println(" C");
-  Serial.println("");
+  Serial.println("");*/
 
   bno.setExtCrystalUse(true);
 
@@ -152,6 +155,7 @@ void setNextDirection() {
     }
     
     directionDone = false;
+    Serial.println("Next movement set.");
 }
 
 /* FUNCTION:  giveMovementInstruction();
@@ -191,6 +195,8 @@ void giveMovementInstruction() {
 */
 void readMovementInput(){
 
+  Serial.println("Reading movement input.");
+
   /* Receiving movement data from accelerometer */
   imu::Vector<3> acc = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
   float movX = acc.x();
@@ -198,13 +204,13 @@ void readMovementInput(){
   float movZ = acc.z();
 
   /* Display the floating point data on monitor */
-  Serial.print("Acc X: ");
+  /*Serial.print("Acc X: ");
   Serial.print(movX);
   Serial.print(" Y: ");
   Serial.print(movY);
   Serial.print(" Z: ");
   Serial.print(movZ);
-  Serial.print("\t");
+  Serial.print("\t");*/
 
   // Filter smaller movements
   if(filterOne < movX || movX < - filterOne)movement[0] = movement[0] + movX;
@@ -220,40 +226,47 @@ void readMovementInput(){
       direction = "Left";
       directionInt = 3;
       directionDetermined = true;
+
+      Serial.println("Direction is left.");
     }
     else if(movement[1] < -movementVal) {
       direction = "Right";
       directionInt = 2;
       directionDetermined = true;
+      Serial.println("Direction is right.");
     }
     else if(movement[2] > movementVal ) {
       direction = "Down";
       directionInt = 1;
       directionDetermined = true;
+      Serial.println("Direction is down.");
     }
     else if(movement[2] < -movementVal) {
       direction = "Up";
       directionInt = 0;
       directionDetermined = true;
+      Serial.println("Direction is up.");
     }
   }
 
   /* Display calibration status for each sensor. */
   uint8_t system, gyro, accel, mag = 0;
   bno.getCalibration(&system, &gyro, &accel, &mag);
-  Serial.print("CALIBRATION: Sys=");
+  /*Serial.print("CALIBRATION: Sys=");
   Serial.print(system, DEC);
   Serial.print(" Gyro=");
   Serial.print(gyro, DEC);
   Serial.print(" Accel=");
   Serial.print(accel, DEC);
   Serial.print(" Mag=");
-  Serial.println(mag, DEC);
+  Serial.println(mag, DEC);*/
 
 }
 
 /* Set green LEDs */
 void correctMovementFeedback() {
+
+    // Our lights are not in the PWM pins and thus some of them cannot use the different brightness level
   
     if (next_movement == 0) {
      analogWrite(green_light_pin_0, brightness);
@@ -348,6 +361,8 @@ void giveMovementFeedback() {
 */
 void movementDone() {
 
+  Serial.println("Movement done. Resetting values.");
+  
   /* Movement input values from user to zero. */
   movement[0] = 0;
   movement[1] = 0;
@@ -421,6 +436,8 @@ void loop() {
   if (buttonState == HIGH) delay(1000);
   
   if (buttonStatus) {
+
+    Serial.println("Inhaling, start of movement.");
     
     for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
       
@@ -436,6 +453,8 @@ void loop() {
   }
 
   if (buttonStatus) {
+
+    Serial.println("Exhaling, start of movement.");
     
     // Stop for a while during the peak before exhale instructions start
     analogWrite(vibration_motor, 0);
