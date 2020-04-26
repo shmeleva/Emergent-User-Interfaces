@@ -529,10 +529,12 @@ void loop() {
       analogWrite(vibration_motor, fadeValue);
       movementLoop();
       delay(100); /* Changing this will affect the respiratory rate*/
+
       checkButton();
       if (buttonStatus == false) {
         analogWrite(vibration_motor, 0);
         endVisualization();
+        startOfExercise = true;
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
 
@@ -552,10 +554,12 @@ void loop() {
       analogWrite(vibration_motor, fadeValue);
       movementLoop();
       delay(100); /* Changing this will affect the respiratory rate*/
+
       checkButton();
       if (buttonStatus == false) {
         analogWrite(vibration_motor, 0);
         endVisualization();
+        startOfExercise = true;
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
 
