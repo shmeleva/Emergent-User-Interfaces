@@ -66,7 +66,7 @@ float filterTwo = 0.4;  //filters for movement Z
 float movementVal = 1;  //filter for total amount for movement to be determined
 boolean directionDetermined = false;
 String direction = "";
-int directionInt = -1;
+int userDirection = -1;
 bool directionDone = true;
 
 // Parameters for MOVEMENT INSTRUCTIONS AND FEEDBACK
@@ -79,7 +79,7 @@ int prev_z = 1;
 int next_y = 2;
 int prev_y = 3;
   
-int next_movement = -1;
+int instructedDirection = -1;
 int axis = -1;
 int temp = -1;
 
@@ -139,7 +139,7 @@ void setNextDirection() {
 
     // z-axis
     if (axis == 0) {
-      next_movement = next_z;
+      instructedDirection = next_z;
       // swap the directions so next coming is the opposite
       temp = prev_z;
       prev_z = next_z;
@@ -147,7 +147,7 @@ void setNextDirection() {
     }
     // y-axis
     else {
-      next_movement = next_y;
+      instructedDirection = next_y;
       // swap the directions so next coming is the opposite
       temp = prev_y;
       prev_y = next_y;
@@ -169,23 +169,19 @@ void setNextDirection() {
 void giveMovementInstruction() {
   
   /* Setting the LEDs for giving the movement instructions */
-  if (instructionsGiven == false) {
-
-    if (next_movement == 0) {
-      analogWrite(blue_light_pin_0, brightness);
-    }
-    else if (next_movement == 1) {
-      analogWrite(blue_light_pin_1, brightness);
-    }
-    else if (next_movement == 2) {
-      analogWrite(blue_light_pin_2, brightness);
-    }
-    else if (next_movement == 3) {
-      analogWrite(blue_light_pin_3, brightness);
-    }
-    instructionsGiven == true;
+  if (instructedDirection == 0) {
+    analogWrite(blue_light_pin_0, brightness);
   }
-  
+  else if (instructedDirection == 1) {
+    analogWrite(blue_light_pin_1, brightness);
+  }
+  else if (instructedDirection == 2) {
+    analogWrite(blue_light_pin_2, brightness);
+  }
+  else if (instructedDirection == 3) {
+    analogWrite(blue_light_pin_3, brightness);
+  }
+  instructionsGiven == true;
 }
 
 /* FUNCTION:  readMovementInput()
@@ -194,8 +190,6 @@ void giveMovementInstruction() {
  *
 */
 void readMovementInput(){
-
-  Serial.println("Reading movement input.");
 
   /* Receiving movement data from accelerometer */
   imu::Vector<3> acc = bno.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
@@ -224,28 +218,33 @@ void readMovementInput(){
 
     if(movement[1] > movementVal ) {
       direction = "Left";
-      directionInt = 3;
+      userDirection = 3;
       directionDetermined = true;
-
-      Serial.println("Direction is left.");
+      Serial.println("Moving left.");
     }
     else if(movement[1] < -movementVal) {
       direction = "Right";
-      directionInt = 2;
+      userDirection = 2;
       directionDetermined = true;
-      Serial.println("Direction is right.");
+      Serial.println("Moving right.");
     }
     else if(movement[2] > movementVal ) {
       direction = "Down";
-      directionInt = 1;
+      userDirection = 1;
       directionDetermined = true;
-      Serial.println("Direction is down.");
+      Serial.println("Moving down.");
     }
     else if(movement[2] < -movementVal) {
       direction = "Up";
-      directionInt = 0;
+      userDirection = 0;
       directionDetermined = true;
-      Serial.println("Direction is up.");
+      Serial.println("Moving up.");
+    }
+    else {
+      direction = "N";
+      userDirection = -1;
+      directionDetermined = false;
+      Serial.println("Could not determine direction.");
     }
   }
 
@@ -268,42 +267,42 @@ void correctMovementFeedback() {
 
     // Our lights are not in the PWM pins and thus some of them cannot use the different brightness level
   
-    if (next_movement == 0) {
-     analogWrite(green_light_pin_0, brightness);
-     analogWrite(blue_light_pin_0, 0);
+    if (instructedDirection == 0) {
+      analogWrite(green_light_pin_0, brightness);
+      analogWrite(blue_light_pin_0, 0);
     }
-    else if (next_movement == 1) {
+    else if (instructedDirection == 1) {
       analogWrite(green_light_pin_1, brightness);
       analogWrite(blue_light_pin_1, 0);
     }
-    else if (next_movement == 2) {
-     analogWrite(green_light_pin_2, brightness);
-     analogWrite(blue_light_pin_2, 0);
+    else if (instructedDirection == 2) {
+      analogWrite(green_light_pin_2, brightness);
+      analogWrite(blue_light_pin_2, 0);
     }
-    else if (next_movement == 3) {
-     analogWrite(green_light_pin_3, brightness);
-     analogWrite(blue_light_pin_3, 0);
+    else if (instructedDirection == 3) {
+      analogWrite(green_light_pin_3, brightness);
+      analogWrite(blue_light_pin_3, 0);
     }
 }
 
 /* Set blue LEDs */
 void neutralMovementFeedback() {
   
-    if (next_movement == 0) {
-     analogWrite(green_light_pin_0, 0);
-     analogWrite(blue_light_pin_0, brightness);
+    if (instructedDirection == 0) {
+      analogWrite(green_light_pin_0, 0);
+      analogWrite(blue_light_pin_0, brightness);
     }
-    else if (next_movement == 1) {
+    else if (instructedDirection == 1) {
       analogWrite(green_light_pin_1, 0);
       analogWrite(blue_light_pin_1, brightness);
     }
-    else if (next_movement == 2) {
-     analogWrite(green_light_pin_2, 0);
-     analogWrite(blue_light_pin_2, brightness);
+    else if (instructedDirection == 2) {
+      analogWrite(green_light_pin_2, 0);
+      analogWrite(blue_light_pin_2, brightness);
     }
-    else if (next_movement == 3) {
-     analogWrite(green_light_pin_3, 0);
-     analogWrite(blue_light_pin_3, brightness);
+    else if (instructedDirection == 3) {
+      analogWrite(green_light_pin_3, 0);
+      analogWrite(blue_light_pin_3, brightness);
     }
 }
 
@@ -317,12 +316,12 @@ void neutralMovementFeedback() {
 void giveMovementFeedback() {
 
   Serial.print("Intended direction: ");
-  Serial.print(next_movement);
+  Serial.print(instructedDirection);
   Serial.print(" Actual movement: ");
-  Serial.print(directionInt);
+  Serial.print(userDirection);
 
   // MOVEMENT CORRECT
-  if (next_movement == directionInt) {
+  if (instructedDirection == userDirection) {
 
     /* Movement is correct. Set LED colour green. */
     Serial.print(" movement is correct");
@@ -330,7 +329,7 @@ void giveMovementFeedback() {
   }
 
   // Semi-correct: right axis
-  else if ((next_movement == 0 || next_movement == 1) && (directionInt == 0 || directionInt == 1)) {
+  else if ((instructedDirection == 0 || instructedDirection == 1) && (userDirection == 0 || userDirection == 1)) {
 
     /* Movement is semi-correct. Set LED colour green. */
     Serial.print(" movement is semi-correct");
@@ -338,7 +337,7 @@ void giveMovementFeedback() {
   }
 
   // Semi-correct: right axis
-  else if ((next_movement == 2 || next_movement == 3) && (directionInt == 2 || directionInt == 3)) {
+  else if ((instructedDirection == 2 || instructedDirection == 3) && (userDirection == 2 || userDirection == 3)) {
 
     /* Movement is semi-correct. Set LED colour green. */
     Serial.print(" movement is semi-correct");
@@ -360,8 +359,6 @@ void giveMovementFeedback() {
  *  function to control movement instructions after a movement is finished
 */
 void movementDone() {
-
-  Serial.println("Movement done. Resetting values.");
   
   /* Movement input values from user to zero. */
   movement[0] = 0;
@@ -398,13 +395,13 @@ void movementLoop() {
     setNextDirection();
   }
 
-  if (!directionDone) {
+  if (!directionDone && !instructionsGiven) {
     giveMovementInstruction();
   }
 
   readMovementInput();
   
-  if (directionDetermined == true && feedGiven == false) {  // TODO: take off feedGiven?
+  if (directionDetermined == true && feedGiven == false) {  // TODO: take off feedGiven -> update the feedback constantly instead?
     giveMovementFeedback();
   }
 
@@ -436,8 +433,6 @@ void loop() {
   if (buttonState == HIGH) delay(1000);
   
   if (buttonStatus) {
-
-    Serial.println("Inhaling, start of movement.");
     
     for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
       
@@ -453,8 +448,6 @@ void loop() {
   }
 
   if (buttonStatus) {
-
-    Serial.println("Exhaling, start of movement.");
     
     // Stop for a while during the peak before exhale instructions start
     analogWrite(vibration_motor, 0);
