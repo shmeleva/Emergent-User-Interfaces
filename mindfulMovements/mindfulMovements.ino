@@ -252,6 +252,48 @@ void readMovementInput(){
 
 }
 
+/* Set green LEDs */
+void correctMovementFeedback() {
+  
+    if (next_movement == 0) {
+     analogWrite(green_light_pin_0, brightness);
+     analogWrite(blue_light_pin_0, 0);
+    }
+    else if (next_movement == 1) {
+      analogWrite(green_light_pin_1, brightness);
+      analogWrite(blue_light_pin_1, 0);
+    }
+    else if (next_movement == 2) {
+     analogWrite(green_light_pin_2, brightness);
+     analogWrite(blue_light_pin_2, 0);
+    }
+    else if (next_movement == 3) {
+     analogWrite(green_light_pin_3, brightness);
+     analogWrite(blue_light_pin_3, 0);
+    }
+}
+
+/* Set blue LEDs */
+void neutralMovementFeedback() {
+  
+    if (next_movement == 0) {
+     analogWrite(green_light_pin_0, 0);
+     analogWrite(blue_light_pin_0, brightness);
+    }
+    else if (next_movement == 1) {
+      analogWrite(green_light_pin_1, 0);
+      analogWrite(blue_light_pin_1, brightness);
+    }
+    else if (next_movement == 2) {
+     analogWrite(green_light_pin_2, 0);
+     analogWrite(blue_light_pin_2, brightness);
+    }
+    else if (next_movement == 3) {
+     analogWrite(green_light_pin_3, 0);
+     analogWrite(blue_light_pin_3, brightness);
+    }
+}
+
 /*  FUNCTION  giveMovementFeedback()
  *   
  *  Give feedback based on the instructions and user's movement.
@@ -270,80 +312,30 @@ void giveMovementFeedback() {
   if (next_movement == directionInt) {
 
     /* Movement is correct. Set LED colour green. */
-
     Serial.print(" movement is correct");
-
-    if (next_movement == 0) {
-     analogWrite(green_light_pin_0, brightness);
-     analogWrite(blue_light_pin_0, 0);
-    }
-    else if (next_movement == 1) {
-      analogWrite(green_light_pin_1, brightness);
-      analogWrite(blue_light_pin_1, 0);
-    }
-    else if (next_movement == 2) {
-     analogWrite(green_light_pin_2, brightness);
-     analogWrite(blue_light_pin_2, 0);
-    }
-    else if (next_movement == 3) {
-     analogWrite(green_light_pin_3, brightness);
-     analogWrite(blue_light_pin_3, 0);
-    }
-
+    correctMovementFeedback();
   }
 
-  // MOVEMENT SEMI-CORRECT 1/2
+  // Semi-correct: right axis
   else if ((next_movement == 0 || next_movement == 1) && (directionInt == 0 || directionInt == 1)) {
 
-    /* Movement is semi-correct. Set the LED color green. */
-
+    /* Movement is semi-correct. Set LED colour green. */
     Serial.print(" movement is semi-correct");
-
-    if (next_movement == 0) {
-     analogWrite(green_light_pin_0, brightness);
-     analogWrite(blue_light_pin_0, 0);
-    }
-    else if (next_movement == 1) {
-      analogWrite(green_light_pin_1, brightness);
-      analogWrite(blue_light_pin_1, 0);
-    }
-    else if (next_movement == 2) {
-     analogWrite(green_light_pin_2, brightness);
-     analogWrite(blue_light_pin_2, 0);
-    }
-    else if (next_movement == 3) {
-     analogWrite(green_light_pin_3, brightness);
-     analogWrite(blue_light_pin_3, 0);
-    }
-
+    correctMovementFeedback();
   }
 
-  // MOVEMENT SEMI-CORRECT 2/2
+  // Semi-correct: right axis
   else if ((next_movement == 2 || next_movement == 3) && (directionInt == 2 || directionInt == 3)) {
-    //movement is semi-correct, green light
-    Serial.print(" movement is semi-correct");
-    if (next_movement == 0) {
-     analogWrite(green_light_pin_0, brightness);
-     analogWrite(blue_light_pin_0, 0); // Zero blue color
-    }
-    else if (next_movement == 1) {
-      analogWrite(green_light_pin_1, brightness);
-      analogWrite(blue_light_pin_1, 0); // Zero blue color
-    }
-    else if (next_movement == 2) {
-     analogWrite(green_light_pin_2, brightness);
-     analogWrite(blue_light_pin_2, 0); // Zero blue color
-    }
-    else if (next_movement == 3) {
-     analogWrite(green_light_pin_3, brightness);
-     analogWrite(blue_light_pin_3, 0); // Zero blue color
-    }
-  }
 
-  // MOVEMENT WRONG
+    /* Movement is semi-correct. Set LED colour green. */
+    Serial.print(" movement is semi-correct");
+    correctMovementFeedback();
+  }
   else {
-    //movement is wrong, keep blue light
+    
+    /* Movement is wrong. Set LED colour blue. */
     Serial.print(" movement is wrong");
+    neutralMovementFeedback();
   }
   
   feedGiven = true; // TODO: take off?
@@ -406,11 +398,11 @@ void movementLoop() {
 /*  FUNCTION  buttonPressed() */
 
 void checkButton() {
-  
+
   buttonState = digitalRead(buttonPin);
-  
+
   if (buttonState == HIGH) {
-    
+
     if (buttonStatus == true) {
       buttonStatus = false;
     }
