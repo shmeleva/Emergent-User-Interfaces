@@ -3,6 +3,13 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
+// Variables to customize for the exercise:
+
+const int warmupDuration = 2;    // Give the duration for warmup phase in minutes
+const int exerciseDuration = 4;  // Give the duration for main exercise phase in minutes
+const int respiratoryRate = 6;  // Set the targeted respiratory rate
+
+
 // ----------- VIBRATION MOTORS -----------
 
 const int vibration_motor = 11;  // Vibration motor, pin 11
@@ -31,7 +38,7 @@ const int blue_light_pin_3 = 10;
 /*  Some of the LEDs are not in the PWM pins. (Not enough of them for this use).
  *  Thus we cannot use other values than HIGH (255) or LOW (0)
 */
-const int brightness = 255; // Comfrotable value for brightness to use with the LEDs
+const int brightness = 255;
 
 // ----------- BUTTON ---------------------
 const int buttonPin = 12; 
@@ -44,16 +51,26 @@ bool continueExercise = false;
  *  takes samples, delay in vibration should do the same, not tested.
 */
 
-// Parameters for PHASE 1: WARM-UP
-/* Numbers are the amount of full breaths (inhale+exhale) -> 2 movements total */
-// TODO: count estimates based on respiratory rate
 
+// Parameters for PHASE 1: WARM-UP
+/*  Values for these are the amount of full breaths (inhale+exhale) -> 2 movements total. 
+ *   
+ *  We can estimate the duration of one full loop of the exercise with respiratory rate
+ *  since the exercise parameters that increase the duration are counted based 
+ *  on the set respiratory rate.
+ *  
+ *  duration of one round (full breath) = 60 / respiratory rate 
+*/
 int startOfExercise = true; // TODO: redundant?
-const int warmupLength = 10;
-int warmupCounter = 0;
-const int exerciseLength = 100;
-int exerciseCounter = 0;
 bool warmupPhase = true;
+
+const int warmupLength = (warmupDuration*60)/(60/respiratoryRate);
+const int exerciseLength = (exerciseDuration*60)/(60/respiratoryRate);
+
+int warmupCounter = 0;
+int exerciseCounter = 0;
+
+
 
 // Parameters for BREATHING INSTRUCTIONS
  /*  minFrq: There is a pause after each decrease, before the next breath starts.
@@ -70,13 +87,14 @@ bool warmupPhase = true;
  *  b = 2, because we want to count both inhale and exhale
  *  c = 0.001 because we want to result in seconds instead of millisecond
  */
-const int respiratoryRate = 6;        // Targeted respiratory rate
 const int pause = 200;                // The break between inhale and exhale (milliseconds)
 const int minFrq = 50;                // Min value of vibration frequency
 const int fadeStep = (255-minFrq)/((60/respiratoryRate + pause*0.001)/0.2);
 
 
+
 // Parameters for MOVEMENT INPUT
+
 float movement[] = {0,0,0};
 //int counter = 0;
 float filterOne = 0.2;  //filters for movement Y
@@ -89,6 +107,7 @@ int userDirection = -1;
 bool directionDone = true;
 
 // Parameters for MOVEMENT INSTRUCTIONS AND FEEDBACK
+
 int directionsDetermined[] = {0,0,0,0}; // amount of directions determined for each direction {up, down, right, left}
 const int directionStrings[] = {"Up","Down","Right","Left"};
 
