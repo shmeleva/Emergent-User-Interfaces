@@ -81,6 +81,7 @@ bool directionDone = true;
 
 // Parameters for MOVEMENT INSTRUCTIONS AND FEEDBACK
 int directionsDetermined[] = {0,0,0,0}; // amount of directions determined for each direction {up, down, right, left}
+const int directionStrings[] = {"Up","Down","Right","Left"};
 
 //directional instuctions
 int next_z = 0; // up
@@ -275,7 +276,7 @@ void readMovementInput(){
 
   // Determine direction from largest number of movements
 
-  int ups = directionsDetermined[0];
+  /*int ups = directionsDetermined[0];
   int downs = directionsDetermined[1];
   int rights = directionsDetermined[2];
   int lefts = directionsDetermined[3];
@@ -296,13 +297,22 @@ void readMovementInput(){
     userDirection = 2;
   }
   else if (lefts >= ups && lefts >= downs && lefts >= rights) {
-    directionInput = "Down";
+    directionInput = "Left";
     userDirection = 3;
   }
   else {
     //Serial.println("no direction found with this, check for logic error") //no direction found with this logic
-  }
+  }*/
 
+  for (i = 0; i < 4; ++i) {
+
+    if (largestValue < directionDetermined[i]) {
+
+      largestValue = directionDetermined[i];
+      directionInput = directionStrings[i];
+      userDirection = i;
+    }
+  }
 
   /* Display calibration status for each sensor. */
   /*uint8_t system, gyro, accel, mag = 0;
