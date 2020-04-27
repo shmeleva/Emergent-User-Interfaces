@@ -652,6 +652,7 @@ void loop() {
   }
 
   if(exerciseCounter >= exerciseLength){//End of exercise
+      buttonStatus = false;
       analogWrite(vibration_motor, 0);
       endVisualization();
       startOfExercise = true;
