@@ -3,8 +3,6 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
-int startOfExercise = true;
-
 // ----------- VIBRATION MOTORS -----------
 
 const int vibration_motor = 11;  // Vibration motor, pin 11
@@ -45,6 +43,17 @@ bool buttonStatus = false;
  *  #define BNO055_SAMPLERATE_DELAY_MS (100)//This is rate accelerometer 
  *  takes samples, delay in vibration should do the same, not tested.
 */
+
+// Parameters for PHASE 1: WARM-UP
+/* Numbers are the amount of full breaths (inhale+exhale) -> 2 movements total */
+// TODO: count estimates based on respiratory rate
+
+int startOfExercise = true; // TODO: redundant?
+const int warmupLength = 10;
+int warmupCounter = 0;
+const int exerciseLength = 100;
+int exerciseCounter = 0;
+bool warmupPhase = true;
 
 // Parameters for BREATHING INSTRUCTIONS
  /*  minFrq: There is a pause after each decrease, before the next breath starts.
@@ -92,12 +101,6 @@ int prev_y = 3; // left
 int instructedDirection = -1;
 int axis = -1;
 int temp = -1;
-
-//counters for warmup and exercise length
-const int warmupLength = 10;
-int warmupCounter = 0;
-const int exerciseLength = 100;
-int exerciseCounter = 0;
 
 // -----------------------------------------------------------------------
 
@@ -304,11 +307,12 @@ void readMovementInput(){
     //Serial.println("no direction found with this, check for logic error") //no direction found with this logic
   }*/
 
-  for (i = 0; i < 4; ++i) {
+  int largestValue = 0;
+  for (int i = 0; i < 4; ++i) {
 
-    if (largestValue < directionDetermined[i]) {
+    if (largestValue < directionsDetermined[i]) {
 
-      largestValue = directionDetermined[i];
+      largestValue = directionsDetermined[i];
       directionInput = directionStrings[i];
       userDirection = i;
     }
@@ -530,7 +534,6 @@ void movementLoop() {
  *   Checks whether button is being pressed
  *   and updates the buttonStatus value.
 */
-
 void checkButton() {
 
   buttonState = digitalRead(buttonPin); // Result will be HIGH during when button is physically pressed down
@@ -548,16 +551,18 @@ void checkButton() {
     }
   }
 }
-/* FUNCTION resetCounters()
+
+/* FUNCTION resetExercise()
  * 
  * Resets warmup and exercise counters when button is pressed or exercise ends
  * 
  */
-void resetCounters(){
-  warmupCounter = 0;
-  exerciseCounter = 0;
+void resetExercise() {
+  warmupCounter = 0; // counting this until warmupLength
+  exerciseCounter = 0; // counting this until exerciseLength
+  startOfExercise = true;
+  warmupPhase = true;
 }
-
  
 /* MAIN
  *
@@ -566,37 +571,51 @@ void loop() {
 
   checkButton();
   if (startOfExercise && buttonStatus) {
+
     Serial.print("Starting exercise."); Serial.println("");
     startOfExercise = false;
+    warmupPhase = true; // this is redundant here really
 
-    // You can play nice led show here
+    // TODO: You can play nice led show here. Otherwise this block is useless.
   }
 
-  // TODO: implement the warmup with skipping movementLoop() during warmup
   // TODO: change the "buttonStatus name"
-  // TODO: why resetCounters() is everywhere??
-  // TODO: we should only need to have the breathing loop once per inhale and exhale
+  // TODO: also check the need for all buttonchecks
 
-  /* WARMUP LOOP: only breathing instructions */
-  if (buttonStatus && warmupCounter <= warmupLength) {
+  if (buttonStatus) {
 
     for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
-      
-      analogWrite(vibration_motor, fadeValue);
-      delay(100); /* Changing this will affect the respiratory rate*/
 
+      /* This sets the vibration motor frequency, 
+      changes by the amount of fadeStep parameter */
+      analogWrite(vibration_motor, fadeValue);
+
+      /* Here we give the movement instructions, 
+      check user's movement direction and give feedback */
+      if (warmupPhase == false) movementLoop(); 
+
+      /* Randomly checking whether the button is being pressed down currently */
       checkButton();
+
       if (buttonStatus == false) {
+        /* Button was pressed down. Stopping the exercise 
+        and resetting all parameters here. */
         analogWrite(vibration_motor, 0);
+        if (warmupPhase == false) endVisualization();
         startOfExercise = true;
-        resetCounters();
+        resetExercise();
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
 
+      /* Short break to make the vibration frequency changes visible. 
+       *  Changing this will affect the respiratory rate. */
+      delay(100);
     }
+
+    if (warmupPhase == false) movementDone();
   }
-  
-  if (buttonStatus && warmupCounter <= warmupLength) {
+
+  if (buttonStatus) {
 
     // Stop for a while during the peak before exhale instructions start
     analogWrite(vibration_motor, 0);
@@ -605,85 +624,49 @@ void loop() {
     for (int fadeValue = 255; fadeValue >= minFrq; fadeValue -= fadeStep) {
 
       analogWrite(vibration_motor, fadeValue);
+      if (warmupPhase == false) movementLoop();
       delay(100); /* Changing this will affect the respiratory rate*/
 
       checkButton();
       if (buttonStatus == false) {
         analogWrite(vibration_motor, 0);
-        endVisualization();
+        if (warmupPhase == false) endVisualization();
         startOfExercise = true;
-        resetCounters();
+        resetExercise();
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
 
     }
-
-    warmupCounter += 1;
-  }
-
-  /* Transition phase between warmup and exercise */
-  // TODO: why do we need to check that exerciseCounter == 0
-  if(buttonStatus && exerciseCounter == 0 && warmupCounter >= warmupLength){
- 
-    //Could play some leds
-    delay(2000);
-  }
-
-  /* MAIN EXERCISE LOOPS: breathing and movement */
-  if (buttonStatus && exerciseCounter <= exerciseLength && warmupCounter >= warmupLength) {
     
-    for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
-      
-      analogWrite(vibration_motor, fadeValue);
-      movementLoop();
-      delay(100); /* Changing this will affect the respiratory rate*/
-
-      checkButton();
-      if (buttonStatus == false) {
-        analogWrite(vibration_motor, 0);
-        endVisualization();
-        startOfExercise = true;
-        resetCounters();
-        break; // if button press is detected, stopping the exercise middle of breathing instructions
-      }
-
+    if (warmupPhase == true) {
+      warmupCounter += 1;
     }
-
-    movementDone();
+    else {
+      /* Resetting all values regarding movement instruction, 
+      detection and feedback, getting ready for next movement. */
+      movementDone();
+      exerciseCounter += 1;
+    }
   }
 
-  if (buttonStatus && exerciseCounter <= exerciseLength && warmupCounter >= warmupLength) {
+  /*
+   *  ENDING THE WARMUP
+  */
+  if (warmupCounter >= warmupLength) {
     
-    // Stop for a while during the peak before exhale instructions start
+    warmupPhase = false;
+    delay(2000); // break between the warmup and main exercise
+    // TODO: could play some LED vis
+  }
+  /*
+   *  ENDING THE MAIN EXERCISE
+  */  
+  if (exerciseCounter >= exerciseLength) {
+    
+    buttonStatus = false; // this takes care that we are not doing the breathing/movement instructions if exercisecounter is maxed out!
     analogWrite(vibration_motor, 0);
-    delay(pause);
-
-    for (int fadeValue = 255; fadeValue >= minFrq; fadeValue -= fadeStep) {
-
-      analogWrite(vibration_motor, fadeValue);
-      movementLoop();
-      delay(100); /* Changing this will affect the respiratory rate*/
-
-      checkButton();
-      if (buttonStatus == false) {
-        analogWrite(vibration_motor, 0);
-        endVisualization();
-        startOfExercise = true;
-        resetCounters();
-        break; // if button press is detected, stopping the exercise middle of breathing instructions
-      }
-
-    }
-
-    movementDone();
-    exerciseCounter += 1;
+    endVisualization();
+    startOfExercise = true;
+    resetExercise();
   }
-
-  if(exerciseCounter >= exerciseLength){//End of exercise
-      buttonStatus = false;
-      analogWrite(vibration_motor, 0);
-      endVisualization();
-      startOfExercise = true;
-      resetCounters();
-    }
 }
