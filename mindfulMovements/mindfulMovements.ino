@@ -548,10 +548,9 @@ void checkButton() {
     }
   }
 }
-/* Function reset counters
+/* FUNCTION resetCounters()
  * 
  * Resets warmup and exercise counters when button is pressed or exercise ends
- * 
  * 
  */
 void resetCounters(){
@@ -572,7 +571,15 @@ void loop() {
 
     // You can play nice led show here
   }
-  if(buttonStatus && warmupCounter <= warmupLength){ // Warmup
+
+  // TODO: implement the warmup with skipping movementLoop() during warmup
+  // TODO: change the "buttonStatus name"
+  // TODO: why resetCounters() is everywhere??
+  // TODO: we should only need to have the breathing loop once per inhale and exhale
+
+  /* WARMUP LOOP: only breathing instructions */
+  if (buttonStatus && warmupCounter <= warmupLength) {
+
     for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
       
       analogWrite(vibration_motor, fadeValue);
@@ -581,16 +588,16 @@ void loop() {
       checkButton();
       if (buttonStatus == false) {
         analogWrite(vibration_motor, 0);
-        endVisualization();
         startOfExercise = true;
         resetCounters();
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
-    
+
     }
   }
+  
   if (buttonStatus && warmupCounter <= warmupLength) {
-    
+
     // Stop for a while during the peak before exhale instructions start
     analogWrite(vibration_motor, 0);
     delay(pause);
@@ -613,12 +620,16 @@ void loop() {
 
     warmupCounter += 1;
   }
+
+  /* Transition phase between warmup and exercise */
+  // TODO: why do we need to check that exerciseCounter == 0
   if(buttonStatus && exerciseCounter == 0 && warmupCounter >= warmupLength){
-    //Transition phase between warmup and exercise
+ 
     //Could play some leds
     delay(2000);
   }
-  
+
+  /* MAIN EXERCISE LOOPS: breathing and movement */
   if (buttonStatus && exerciseCounter <= exerciseLength && warmupCounter >= warmupLength) {
     
     for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
