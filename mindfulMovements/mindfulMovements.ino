@@ -3,12 +3,11 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
-
-int startOfExercise= true;
+int startOfExercise = true;
 
 // ----------- VIBRATION MOTORS -----------
 
-const int vibration_motor = 11;  // Vibration motor, pin 9
+const int vibration_motor = 11;  // Vibration motor, pin 11
 
 // ----------- ACCELEROMETER --------------
 Adafruit_BNO055 bno = Adafruit_BNO055();
@@ -246,55 +245,63 @@ void readMovementInput(){
    *  Y = left, -Y = right, Z = up, -Z = down
   */
 
-    if(movement[1] > movementVal ) {
-      directionDetermined = true;
-      directionsDetermined[3] += 1; // add to list as movement
-      movement[1] = 0; // reset so new movement may come
-      Serial.println("Moving left.");
-    }
-    else if(movement[1] < -movementVal) {
-      directionDetermined = true;
-      directionsDetermined[2] += 1;
-      movement[1] = 0;
-      Serial.println("Moving right.");
-    }
-    else if(movement[2] > movementVal ) {
-      directionDetermined = true;
-      directionsDetermined[1] += 1;
-      movement[2] = 0;
-      Serial.println("Moving down.");
-    }
-    else if(movement[2] < -movementVal) {
-      directionDetermined = true;
-      directionsDetermined[0] += 1;
-      movement[2] = 0;
-      Serial.println("Moving up.");
-    }
-    else {
-      //Serial.println("Could not determine direction.");
-    }
-    //determine direction from largest number of movements
-    if(directionsDetermined[0] >= directionsDetermined[1] && directionsDetermined[0] >= directionsDetermined[2] && directionsDetermined[0] >= directionsDetermined[3]){
-      directionInput = "Up";
-      userDirection = 0;
-    }
-    else if(directionsDetermined[1] >= directionsDetermined[0] && directionsDetermined[1] >= directionsDetermined[2] && directionsDetermined[1] >= directionsDetermined[3]){
-      directionInput = "Down";
-      userDirection = 1;
-    }
+  if (movement[1] > movementVal) {
+    directionDetermined = true;
+    directionsDetermined[3] += 1; // add to list as movement
+    movement[1] = 0; // reset so new movement may come
+    Serial.println("Moving left.");
+  }
+  else if (movement[1] < -movementVal) {
+    directionDetermined = true;
+    directionsDetermined[2] += 1;
+    movement[1] = 0;
+    Serial.println("Moving right.");
+  }
+  else if (movement[2] > movementVal ) {
+    directionDetermined = true;
+    directionsDetermined[1] += 1;
+    movement[2] = 0;
+    Serial.println("Moving down.");
+  }
+  else if (movement[2] < -movementVal) {
+    directionDetermined = true;
+    directionsDetermined[0] += 1;
+    movement[2] = 0;
+    Serial.println("Moving up.");
+  }
+  else {
+    //Serial.println("Could not determine direction.");
+  }
 
-    else if(directionsDetermined[2] >= directionsDetermined[0] && directionsDetermined[2] >= directionsDetermined[1] && directionsDetermined[2] >= directionsDetermined[3]){
-      directionInput = "Right";
-      userDirection = 2;
-    }
+  // Determine direction from largest number of movements
 
-    else if(directionsDetermined[3] >= directionsDetermined[0] && directionsDetermined[3] >= directionsDetermined[1] && directionsDetermined[3] >= directionsDetermined[2]){
-      directionInput = "Down";
-      userDirection = 3;
-    }
-    else {
-      //Serial.println("no direction found with this, check for logic error") //no direction found with this logic
-    }
+  int ups = directionsDetermined[0];
+  int downs = directionsDetermined[1];
+  int rights = directionsDetermined[2];
+  int lefts = directionsDetermined[3];
+  
+  if (ups >= downs && ups >= rights && ups >= lefts) {
+    
+    directionInput = "Up";
+    userDirection = 0;
+  }
+  else if (downs >= ups && downs >= rights && downs >= lefts) {
+    
+    directionInput = "Down";
+    userDirection = 1;
+  }
+  else if (rights >= ups && rights >= downs && rights >= lefts) {
+    
+    directionInput = "Right";
+    userDirection = 2;
+  }
+  else if (lefts >= ups && lefts >= downs && lefts >= rights) {
+    directionInput = "Down";
+    userDirection = 3;
+  }
+  else {
+    //Serial.println("no direction found with this, check for logic error") //no direction found with this logic
+  }
 
 
   /* Display calibration status for each sensor. */
