@@ -81,8 +81,7 @@ int userDirection = -1;
 bool directionDone = true;
 
 // Parameters for MOVEMENT INSTRUCTIONS AND FEEDBACK
-bool instructionsGiven = false;
-bool feedGiven = false;
+int directionsDetermined[] = {0,0,0,0}; // amount of directions determined for each direction {up, down, right, left}
 
 //directional instuctions
 int next_z = 0; // up
@@ -93,6 +92,12 @@ int prev_y = 3; // left
 int instructedDirection = -1;
 int axis = -1;
 int temp = -1;
+
+//counters for warmup and exercise length
+const int warmupLength = 10;
+int warmupCounter = 0;
+const int exerciseLength = 100;
+int exerciseCounter = 0;
 
 // -----------------------------------------------------------------------
 
@@ -191,7 +196,7 @@ void setNextDirection() {
  *  Function to set the next movement instruction.
  *  
  *  req = directionDone = false
- *  req = instructionsGiven = false
+ *  
 */
 void giveMovementInstruction() {
   
@@ -208,7 +213,6 @@ void giveMovementInstruction() {
   else if (instructedDirection == 3) {
     analogWrite(blue_light_pin_3, brightness);
   }
-  instructionsGiven == true;
 }
 
 /* FUNCTION:  readMovementInput()
@@ -241,39 +245,57 @@ void readMovementInput(){
   /*  Determine the movement direction to give feedback for
    *  Y = left, -Y = right, Z = up, -Z = down
   */
-  if (!directionDetermined) {   // TODO: take this restriction away. now it only detects the movement in the very beginning of movement, which is often wrong.
 
     if(movement[1] > movementVal ) {
-      directionInput = "Left";
-      userDirection = 3;
       directionDetermined = true;
+      directionsDetermined[3] += 1; // add to list as movement
+      movement[1] = 0; // reset so new movement may come
       Serial.println("Moving left.");
     }
     else if(movement[1] < -movementVal) {
-      directionInput = "Right";
-      userDirection = 2;
       directionDetermined = true;
+      directionsDetermined[2] += 1;
+      movement[1] = 0;
       Serial.println("Moving right.");
     }
     else if(movement[2] > movementVal ) {
-      directionInput = "Down";
-      userDirection = 1;
       directionDetermined = true;
+      directionsDetermined[1] += 1;
+      movement[2] = 0;
       Serial.println("Moving down.");
     }
     else if(movement[2] < -movementVal) {
-      directionInput = "Up";
-      userDirection = 0;
       directionDetermined = true;
+      directionsDetermined[0] += 1;
+      movement[2] = 0;
       Serial.println("Moving up.");
     }
     else {
-      directionInput = "";
-      userDirection = -1;
-      directionDetermined = false;
       //Serial.println("Could not determine direction.");
     }
-  }
+    //determine direction from largest number of movements
+    if(directionsDetermined[0] >= directionsDetermined[1] && directionsDetermined[0] >= directionsDetermined[2] && directionsDetermined[0] >= directionsDetermined[3]){
+      directionInput = "Up";
+      userDirection = 0;
+    }
+    else if(directionsDetermined[1] >= directionsDetermined[0] && directionsDetermined[1] >= directionsDetermined[2] && directionsDetermined[1] >= directionsDetermined[3]){
+      directionInput = "Down";
+      userDirection = 1;
+    }
+
+    else if(directionsDetermined[2] >= directionsDetermined[0] && directionsDetermined[2] >= directionsDetermined[1] && directionsDetermined[2] >= directionsDetermined[3]){
+      directionInput = "Right";
+      userDirection = 2;
+    }
+
+    else if(directionsDetermined[3] >= directionsDetermined[0] && directionsDetermined[3] >= directionsDetermined[1] && directionsDetermined[3] >= directionsDetermined[2]){
+      directionInput = "Down";
+      userDirection = 3;
+    }
+    else {
+      //Serial.println("no direction found with this, check for logic error") //no direction found with this logic
+    }
+
 
   /* Display calibration status for each sensor. */
   /*uint8_t system, gyro, accel, mag = 0;
@@ -336,7 +358,7 @@ void neutralMovementFeedback() {
  *  Give feedback based on the instructions and user's movement.
  *  
  *  req:  directionDetermined = true
- *  req:  feedbackGiven = false
+ *  
 */
 void giveMovementFeedback() {
 
@@ -376,7 +398,6 @@ void giveMovementFeedback() {
     neutralMovementFeedback();
   }
   
-  feedGiven = true; // TODO: take off?
   Serial.print("");
 }
 
@@ -393,8 +414,10 @@ void movementDone() {
   directionInput = "";
   directionDetermined = false;
   directionDone = true;
-  instructionsGiven = false;
-  feedGiven = false;
+  directionsDetermined[0] = 0;
+  directionsDetermined[1] = 0;
+  directionsDetermined[2] = 0;
+  directionsDetermined[3] = 0;
 
   /* Set all LEDs off. */
   analogWrite(green_light_pin_0, 0);
@@ -473,13 +496,13 @@ void movementLoop() {
     setNextDirection();
   }
 
-  if (!directionDone && !instructionsGiven) {
+  if (!directionDone) {
     giveMovementInstruction();
   }
 
   readMovementInput();
   
-  if (directionDetermined == true && feedGiven == false) {  // TODO: take off feedGiven -> update the feedback constantly instead?
+  if (directionDetermined == true) { 
     giveMovementFeedback();
   }
 
@@ -508,7 +531,18 @@ void checkButton() {
     }
   }
 }
+/* Function reset counters
+ * 
+ * Resets warmup and exercise counters when button is pressed or exercise ends
+ * 
+ * 
+ */
+void resetCounters(){
+  warmupCounter = 0;
+  exerciseCounter = 0;
+}
 
+ 
 /* MAIN
  *
 */
@@ -519,10 +553,56 @@ void loop() {
     Serial.print("Starting exercise."); Serial.println("");
     startOfExercise = false;
 
-    // TODO: breathing-only-phase here
+    // You can play nice led show here
+  }
+  if(buttonStatus && warmupCounter <= warmupLength){ // Warmup
+    for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
+      
+      analogWrite(vibration_motor, fadeValue);
+      delay(100); /* Changing this will affect the respiratory rate*/
+
+      checkButton();
+      if (buttonStatus == false) {
+        analogWrite(vibration_motor, 0);
+        endVisualization();
+        startOfExercise = true;
+        resetCounters();
+        break; // if button press is detected, stopping the exercise middle of breathing instructions
+      }
+    
+    }
+  }
+  if (buttonStatus && warmupCounter <= warmupLength) {
+    
+    // Stop for a while during the peak before exhale instructions start
+    analogWrite(vibration_motor, 0);
+    delay(pause);
+
+    for (int fadeValue = 255; fadeValue >= minFrq; fadeValue -= fadeStep) {
+
+      analogWrite(vibration_motor, fadeValue);
+      delay(100); /* Changing this will affect the respiratory rate*/
+
+      checkButton();
+      if (buttonStatus == false) {
+        analogWrite(vibration_motor, 0);
+        endVisualization();
+        startOfExercise = true;
+        resetCounters();
+        break; // if button press is detected, stopping the exercise middle of breathing instructions
+      }
+
+    }
+
+    warmupCounter += 1;
+  }
+  if(buttonStatus && exerciseCounter == 0 && warmupCounter >= warmupLength){
+    //Transition phase between warmup and exercise
+    //Could play some leds
+    delay(2000);
   }
   
-  if (buttonStatus) {
+  if (buttonStatus && exerciseCounter <= exerciseLength && warmupCounter >= warmupLength) {
     
     for (int fadeValue = minFrq; fadeValue <= 255; fadeValue += fadeStep) {
       
@@ -535,6 +615,7 @@ void loop() {
         analogWrite(vibration_motor, 0);
         endVisualization();
         startOfExercise = true;
+        resetCounters();
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
 
@@ -543,7 +624,7 @@ void loop() {
     movementDone();
   }
 
-  if (buttonStatus) {
+  if (buttonStatus && exerciseCounter <= exerciseLength && warmupCounter >= warmupLength) {
     
     // Stop for a while during the peak before exhale instructions start
     analogWrite(vibration_motor, 0);
@@ -560,16 +641,20 @@ void loop() {
         analogWrite(vibration_motor, 0);
         endVisualization();
         startOfExercise = true;
+        resetCounters();
         break; // if button press is detected, stopping the exercise middle of breathing instructions
       }
 
     }
 
     movementDone();
+    exerciseCounter += 1;
   }
 
-  // TODO: implement a timer to stop the movement exercise after some time according to a variable 
-  // (we can set it for testing purposes for different lengths, e.g. 3 or 10 minutes).
-  // After that, do "end visualization".
-  
+  if(exerciseCounter >= exerciseLength){//End of exercise
+      analogWrite(vibration_motor, 0);
+      endVisualization();
+      startOfExercise = true;
+      resetCounters();
+    }
 }
