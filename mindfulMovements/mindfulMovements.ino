@@ -110,7 +110,7 @@ bool directionDone = true;
 
 int directionsDetermined[] = {0,0,0,0}; // amount of directions determined for each direction {up, down, right, left}
 const int directionStrings[] = {"Up","Down","Right","Left"};
-bool latestFeedback = false;
+int latestFeedback = -1;
 
 //directional instuctions
 int next_z = 0; // up
@@ -409,37 +409,49 @@ void giveMovementFeedback() {
   //Serial.print("Actual movement: ");
   //Serial.println(userDirection);
   Serial.println("Feedback: ");
-  
-  // MOVEMENT CORRECT
-  if (instructedDirection == userDirection) {
 
-    /* Movement is correct. Set LED colour green. */
-    Serial.println("Movement is correct.");
-    correctMovementFeedback();
+  int thisFeedback = -1;
+ 
+  if (instructedDirection == userDirection)
+  {
+    // Correct movement
+    thisFeedback = 1;
+  }
+  else if ((instructedDirection == 0 || instructedDirection == 1) && (userDirection == 0 || userDirection == 1))
+  {
+    // Semi-correct: correct axis
+    thisFeedback = 0;
+  }
+  else if ((instructedDirection == 2 || instructedDirection == 3) && (userDirection == 2 || userDirection == 3))
+  {
+    // Semi-correct: correct axis
+    thisFeedback = 0;
+  }
+  else 
+  {
+    // Wrong movement
+    thisFeedback = -1;
   }
 
-  // Semi-correct: correct axis
-  else if ((instructedDirection == 0 || instructedDirection == 1) && (userDirection == 0 || userDirection == 1)) {
-
-    /* Movement is semi-correct. Set LED colour green. */
-    Serial.println("Movement is semi-correct.");
-    correctMovementFeedback(); // using this since only 2/3 colours in use.
-  }
-
-  // Semi-correct: correct axis
-  else if ((instructedDirection == 2 || instructedDirection == 3) && (userDirection == 2 || userDirection == 3)) {
-
-    /* Movement is semi-correct. Set LED colour green. */
-    Serial.println("Movement is semi-correct.");
-    correctMovementFeedback(); // using this since only 2/3 colours in use.
-  }
-  else {
+  /* Change only if feedback changes */
+  if (thisFeedback != latestFeedback) {
     
-    /* Movement is wrong. Set LED colour blue. */
-    Serial.println("Movement is wrong.");
-    neutralMovementFeedback();
+    latestFeedback = thisFeedback;
+
+    if (thisFeedback == 1 || thisFeedback == 0) {
+      
+      /* Movement is correct or semi-correct. Set LED colour green. */
+      Serial.println("Movement is correct.");
+      correctMovementFeedback();
+      
+    } else {
+
+      /* Movement is wrong. Set LED colour blue. */
+      Serial.println("Movement is wrong.");
+      neutralMovementFeedback();
+    }
   }
-  
+    
   Serial.println("");
 }
 
