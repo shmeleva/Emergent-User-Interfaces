@@ -5,9 +5,9 @@
 
 // Variables to customize for the exercise:
 
-const int warmupDuration = 2;    // Give the duration for warmup phase in minutes
-const int exerciseDuration = 4;  // Give the duration for main exercise phase in minutes
-const int respiratoryRate = 6;  // Set the targeted respiratory rate
+const int warmupDuration = 1;    // Give the duration for warmup phase in minutes
+const int exerciseDuration = 2;  // Give the duration for main exercise phase in minutes
+const int respiratoryRate = 4;  // Set the targeted respiratory rate
 
 
 // ----------- VIBRATION MOTORS -----------
@@ -61,8 +61,8 @@ bool continueExercise = false;
  *  
  *  duration of one round (full breath) = 60 / respiratory rate 
 */
-int startOfExercise = true; // TODO: redundant?
-bool warmupPhase = true;
+int startOfExercise = true;
+bool warmupPhase = false;
 
 const int warmupLength = (warmupDuration*60)/(60/respiratoryRate);
 const int exerciseLength = (exerciseDuration*60)/(60/respiratoryRate);
@@ -110,6 +110,7 @@ bool directionDone = true;
 
 int directionsDetermined[] = {0,0,0,0}; // amount of directions determined for each direction {up, down, right, left}
 const int directionStrings[] = {"Up","Down","Right","Left"};
+bool latestFeedback = false;
 
 //directional instuctions
 int next_z = 0; // up
@@ -210,7 +211,8 @@ void setNextDirection() {
       directionOutput = "";
     }
 
-    Serial.println("Next movement set: "); Serial.println(directionOutput);
+    Serial.println("Next movement set: "); 
+    Serial.println(directionOutput);
 }
 
 /* FUNCTION:  giveMovementInstruction();
@@ -402,17 +404,17 @@ void neutralMovementFeedback() {
 */
 void giveMovementFeedback() {
 
-  Serial.print("Intended direction:"); 
-  Serial.print(instructedDirection); Serial.print("");
-  Serial.print("Actual movement:");
-  Serial.print(userDirection); Serial.print("");
-  Serial.print("Feedback: ");
+  //Serial.print("Intended direction: "); 
+  //Serial.println(instructedDirection);
+  //Serial.print("Actual movement: ");
+  //Serial.println(userDirection);
+  Serial.println("Feedback: ");
   
   // MOVEMENT CORRECT
   if (instructedDirection == userDirection) {
 
     /* Movement is correct. Set LED colour green. */
-    Serial.print("movement is correct.");
+    Serial.println("Movement is correct.");
     correctMovementFeedback();
   }
 
@@ -420,7 +422,7 @@ void giveMovementFeedback() {
   else if ((instructedDirection == 0 || instructedDirection == 1) && (userDirection == 0 || userDirection == 1)) {
 
     /* Movement is semi-correct. Set LED colour green. */
-    Serial.print("movement is semi-correct.");
+    Serial.println("Movement is semi-correct.");
     correctMovementFeedback(); // using this since only 2/3 colours in use.
   }
 
@@ -428,17 +430,17 @@ void giveMovementFeedback() {
   else if ((instructedDirection == 2 || instructedDirection == 3) && (userDirection == 2 || userDirection == 3)) {
 
     /* Movement is semi-correct. Set LED colour green. */
-    Serial.print("movement is semi-correct.");
+    Serial.println("Movement is semi-correct.");
     correctMovementFeedback(); // using this since only 2/3 colours in use.
   }
   else {
     
     /* Movement is wrong. Set LED colour blue. */
-    Serial.print("movement is wrong.");
+    Serial.println("Movement is wrong.");
     neutralMovementFeedback();
   }
   
-  Serial.print("");
+  Serial.println("");
 }
 
 /* FUNCTION movementDone()
@@ -541,7 +543,7 @@ void movementLoop() {
   }
 
   readMovementInput();
-  
+ 
   if (directionDetermined == true) { 
     giveMovementFeedback();
   }
@@ -606,11 +608,17 @@ void loop() {
   checkButton();
   if (startOfExercise && continueExercise) {
 
-    Serial.print("Starting exercise."); Serial.println("");
+    Serial.println("Starting exercise.");
+    Serial.println("");
     startOfExercise = false;
-    warmupPhase = true; // this is redundant here really
+    warmupPhase = true; // Not redundant!
 
     // TODO: You can play nice led show here. Otherwise this block is useless.
+  }
+  if (warmupPhase && continueExercise) {
+    Serial.print("Warmup round, rounds left: ");
+    Serial.println(warmupLength-warmupCounter);
+    Serial.println(""); 
   }
 
   if (continueExercise) {
@@ -683,6 +691,8 @@ void loop() {
     
     warmupPhase = false;
     /* Doing a short pause between the warmup and main exercise starting. */
+    Serial.println("Warmup is finished.");
+    Serial.println("");
     delay(2000);
     // TODO: could play some LED vis
   }
@@ -693,6 +703,8 @@ void loop() {
 
     /* continueExercise variable takes care that we are not doing the breathing/movement 
     instructions if exercisecounter is maxed out! */
+    Serial.println("Finishing exercise.");
+    Serial.println("");
     continueExercise = false;
     finishExercise();
   }
