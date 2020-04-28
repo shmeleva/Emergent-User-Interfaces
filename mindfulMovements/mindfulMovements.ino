@@ -104,12 +104,12 @@ boolean directionDetermined = false;
 String directionInput = "";
 String directionOutput = "";
 int userDirection = -1;
-bool directionDone = true;
+bool instructionsGiven = true;
 
 // Parameters for MOVEMENT INSTRUCTIONS AND FEEDBACK
 
 int directionsDetermined[] = {0,0,0,0}; // amount of directions determined for each direction {up, down, right, left}
-const int directionStrings[] = {"Up","Down","Right","Left"};
+const String directionStrings[] = {"Up","Down","Right","Left"};
 int latestFeedback = -1;
 
 //directional instuctions
@@ -117,7 +117,8 @@ int next_z = 0; // up
 int prev_z = 1; // down
 int next_y = 2; // right
 int prev_y = 3; // left
-  
+
+int nextInstruction = -1;
 int instructedDirection = -1;
 int axis = -1;
 int temp = -1;
@@ -170,7 +171,6 @@ void setup(void)
  *  
  *  Set the direction for next movement.
  *  
- *  req: directionDone = true
  */
 void setNextDirection() {
 
@@ -178,7 +178,7 @@ void setNextDirection() {
 
     // z-axis
     if (axis == 0) {
-      instructedDirection = next_z;
+      nextInstruction = next_z;
       // swap the directions so next coming is the opposite
       temp = prev_z;
       prev_z = next_z;
@@ -186,29 +186,15 @@ void setNextDirection() {
     }
     // y-axis
     else {
-      instructedDirection = next_y;
+      nextInstruction = next_y;
       // swap the directions so next coming is the opposite
       temp = prev_y;
       prev_y = next_y;
       next_y = temp;
     }
-    
-    directionDone = false;
 
-    if (instructedDirection == 0) {
-      directionOutput = "Up";
-
-    } else if (instructedDirection == 1) {
-      directionOutput = "Down";
-
-    } else if (instructedDirection == 2) {
-      directionOutput = "Right";
-
-    } else if (instructedDirection == 3) {
-      directionOutput = "Left";
-
-    } else {
-      directionOutput = "";
+    if (0 <= nextInstruction <= 3) {
+      directionOutput = directionStrings[nextInstruction];  
     }
 
     Serial.println("Next movement set: "); 
@@ -219,12 +205,14 @@ void setNextDirection() {
  *  
  *  Function to set the next movement instruction.
  *  
- *  req = directionDone = false
+ *  req = instructionsGiven = false
  *  
 */
 void giveMovementInstruction() {
   
   /* Setting the LEDs for giving the movement instructions */
+  instructedDirection = nextInstruction;
+  
   if (instructedDirection == 0) {
     analogWrite(blue_light_pin_0, HIGH);
     analogWrite(green_light_pin_0, LOW);
@@ -241,6 +229,33 @@ void giveMovementInstruction() {
     analogWrite(blue_light_pin_3, HIGH);
     analogWrite(green_light_pin_3, LOW);
   }
+}
+
+void determineDirection() {
+
+  // Determine direction from largest number of movements
+
+  Serial.println("Current values:"); 
+  for (int i = 0; i < 4; ++i) {
+    Serial.println(directionsDetermined[i]);
+  }
+
+  int largestValue = 0;
+  for (int i = 0; i < 4; ++i) {
+
+    if (largestValue < directionsDetermined[i]) {
+
+      largestValue = directionsDetermined[i];
+      directionInput = directionStrings[i];
+
+      directionDetermined = true;
+      userDirection = i;
+      
+      Serial.println("Determined direction:");
+      Serial.println(directionInput);
+    }
+  }
+
 }
 
 /* FUNCTION:  readMovementInput()
@@ -275,73 +290,32 @@ void readMovementInput(){
   */
 
   if (movement[1] > movementVal) {
-    directionDetermined = true;
+    //directionDetermined = true;
     directionsDetermined[3] += 1; // add to list as movement
     movement[1] = 0; // reset so new movement may come
-    Serial.println("Moving left.");
+    //Serial.println("Moving left.");
   }
   else if (movement[1] < -movementVal) {
-    directionDetermined = true;
+    //directionDetermined = true;
     directionsDetermined[2] += 1;
     movement[1] = 0;
-    Serial.println("Moving right.");
+    //Serial.println("Moving right.");
   }
   else if (movement[2] > movementVal ) {
-    directionDetermined = true;
+    //directionDetermined = true;
     directionsDetermined[1] += 1;
     movement[2] = 0;
-    Serial.println("Moving down.");
+    //Serial.println("Moving down.");
   }
   else if (movement[2] < -movementVal) {
-    directionDetermined = true;
+    //directionDetermined = true;
     directionsDetermined[0] += 1;
     movement[2] = 0;
-    Serial.println("Moving up.");
+    //Serial.println("Moving up.");
   }
   else {
     //Serial.println("Could not determine direction.");
-  }
-
-  // Determine direction from largest number of movements
-
-  /*int ups = directionsDetermined[0];
-  int downs = directionsDetermined[1];
-  int rights = directionsDetermined[2];
-  int lefts = directionsDetermined[3];
-  
-  if (ups >= downs && ups >= rights && ups >= lefts) {
-    
-    directionInput = "Up";
-    userDirection = 0;
-  }
-  else if (downs >= ups && downs >= rights && downs >= lefts) {
-    
-    directionInput = "Down";
-    userDirection = 1;
-  }
-  else if (rights >= ups && rights >= downs && rights >= lefts) {
-    
-    directionInput = "Right";
-    userDirection = 2;
-  }
-  else if (lefts >= ups && lefts >= downs && lefts >= rights) {
-    directionInput = "Left";
-    userDirection = 3;
-  }
-  else {
-    //Serial.println("no direction found with this, check for logic error") //no direction found with this logic
-  }*/
-
-  int largestValue = 0;
-  for (int i = 0; i < 4; ++i) {
-
-    if (largestValue < directionsDetermined[i]) {
-
-      largestValue = directionsDetermined[i];
-      directionInput = directionStrings[i];
-      userDirection = i;
-    }
-  }
+  }  
 
   /* Display calibration status for each sensor. */
   /*uint8_t system, gyro, accel, mag = 0;
@@ -354,7 +328,6 @@ void readMovementInput(){
   Serial.print(accel, DEC);
   Serial.print(" Mag=");
   Serial.println(mag, DEC);*/
-
 }
 
 /* Set green LEDs */
@@ -469,7 +442,7 @@ void movementDone() {
   movement[2] = 0;
   directionInput = "";
   directionDetermined = false;
-  directionDone = true;
+  instructionsGiven = false;
   directionsDetermined[0] = 0;
   directionsDetermined[1] = 0;
   directionsDetermined[2] = 0;
@@ -547,19 +520,24 @@ void endVisualization() {
  *   3 and giving feedback based on actual movement.
 */
 void movementLoop() {
-  
-  if (directionDone) {
+
+  /* Set the next instructions already during the previous one. */
+  if (instructionsGiven) {
     setNextDirection();
   }
 
-  if (!directionDone) {
+  /* Give instructions once. */
+  if (!instructionsGiven) {
     giveMovementInstruction();
+    instructionsGiven = true;
   }
 
   readMovementInput();
+  determineDirection();
  
   if (directionDetermined == true) { 
     giveMovementFeedback();
+    directionDetermined == false;
   }
 
 }
