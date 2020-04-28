@@ -5,9 +5,9 @@
 
 // Variables to customize for the exercise:
 
-const float warmupDuration = 0.5;    // Give the duration for warmup phase in minutes
-const float exerciseDuration = 5;  // Give the duration for main exercise phase in minutes
-const int respiratoryRate = 7;  // Set the targeted respiratory rate
+const float warmupDuration = 0.5; // Give the duration for warmup phase in minutes
+const float exerciseDuration = 5; // Give the duration for main exercise phase in minutes
+const int respiratoryRate = 7;    // Set the targeted respiratory rate
 
 
 // ----------- VIBRATION MOTORS -----------
@@ -20,20 +20,20 @@ Adafruit_BNO055 bno = Adafruit_BNO055();
 // ----------- LED LIGHTS -----------------
 
 // Up
-const int green_light_pin_0 = 2; // non PWM pin - use digitalWrite() HIGH/LOW
-const int blue_light_pin_0 = 4;  // non PWM pin - use digitalWrite() HIGH/LOW
+const int greenLed_up_npwm = 2; // non PWM pin - use digitalWrite() HIGH/LOW
+const int blueLed_up_npwm = 4;  // non PWM pin - use digitalWrite() HIGH/LOW
 
 // Down
-const int green_light_pin_1 = 3;
-const int blue_light_pin_1 = 6;
+const int greenLed_down = 3;
+const int blueLed_down = 6;
 
 // Right
-const int green_light_pin_2 = 5;
-const int blue_light_pin_2 = 7; // non PWM pin - use digitalWrite() HIGH/LOW
+const int greenLed_right = 5;
+const int blueLed_right_npwm = 7; // non PWM pin - use digitalWrite() HIGH/LOW
 
 // Left
-const int green_light_pin_3 = 9;
-const int blue_light_pin_3 = 10;
+const int greenLed_left = 9;
+const int blueLed_left = 10;
 
 /*  Some of the LEDs are not in the PWM pins. (Not enough of them for this use).
  *  Thus we cannot use other values than HIGH (255) or LOW (0)
@@ -130,14 +130,14 @@ void setup(void)
   pinMode(buttonPin, INPUT);
 
   /* initialize the LED lights: 4 RGB LEDs, using 2 of the colors (2 pins/LED)*/
-  pinMode(green_light_pin_0, OUTPUT);
-  pinMode(blue_light_pin_0, OUTPUT);
-  pinMode(green_light_pin_1, OUTPUT);
-  pinMode(blue_light_pin_1, OUTPUT);
-  pinMode(green_light_pin_2, OUTPUT);
-  pinMode(blue_light_pin_2, OUTPUT);
-  pinMode(green_light_pin_3, OUTPUT);
-  pinMode(blue_light_pin_3, OUTPUT);
+  pinMode(greenLed_up_npwm, OUTPUT);
+  pinMode(blueLed_up_npwm, OUTPUT);
+  pinMode(greenLed_down, OUTPUT);
+  pinMode(blueLed_down, OUTPUT);
+  pinMode(greenLed_right, OUTPUT);
+  pinMode(blueLed_right_npwm, OUTPUT);
+  pinMode(greenLed_left, OUTPUT);
+  pinMode(blueLed_left, OUTPUT);
 
   // Printing accelerometer status and data on monitor:
   
@@ -222,20 +222,20 @@ void giveMovementInstruction() {
   Serial.print("GO – "); Serial.println(directionOutput);
   
   if (instructedDirection == 0) {
-    digitalWrite(blue_light_pin_0, HIGH);
-    digitalWrite(green_light_pin_0, LOW);
+    digitalWrite(blueLed_up_npwm, HIGH);
+    digitalWrite(greenLed_up_npwm, LOW);
   }
   else if (instructedDirection == 1) {
-    digitalWrite(blue_light_pin_1, HIGH);
-    digitalWrite(green_light_pin_1, LOW);
+    digitalWrite(blueLed_down, HIGH);
+    digitalWrite(greenLed_down, LOW);
   }
   else if (instructedDirection == 2) {
-    digitalWrite(blue_light_pin_2, HIGH);
-    digitalWrite(green_light_pin_2, LOW);
+    digitalWrite(blueLed_right_npwm, HIGH);
+    digitalWrite(greenLed_right, LOW);
   }
   else if (instructedDirection == 3) {
-    digitalWrite(blue_light_pin_3, HIGH);
-    digitalWrite(green_light_pin_3, LOW);
+    digitalWrite(blueLed_left, HIGH);
+    digitalWrite(greenLed_left, LOW);
   }
 
   instructionsGiven = true;
@@ -345,20 +345,20 @@ void readMovementInput(){
 void correctMovementFeedback() {
   
     if (instructedDirection == 0) {
-      digitalWrite(green_light_pin_0, HIGH);
-      digitalWrite(blue_light_pin_0, LOW);
+      digitalWrite(greenLed_up_npwm, HIGH);
+      digitalWrite(blueLed_up_npwm, LOW);
     }
     else if (instructedDirection == 1) {
-      digitalWrite(green_light_pin_1, HIGH);
-      digitalWrite(blue_light_pin_1, LOW);
+      digitalWrite(greenLed_down, HIGH);
+      digitalWrite(blueLed_down, LOW);
     }
     else if (instructedDirection == 2) {
-      digitalWrite(green_light_pin_2, HIGH);
-      digitalWrite(blue_light_pin_2, LOW);
+      digitalWrite(greenLed_right, HIGH);
+      digitalWrite(blueLed_right_npwm, LOW);
     }
     else if (instructedDirection == 3) {
-      digitalWrite(green_light_pin_3, HIGH);
-      digitalWrite(blue_light_pin_3, LOW);
+      digitalWrite(greenLed_left, HIGH);
+      digitalWrite(blueLed_left, LOW);
     }
 }
 
@@ -366,20 +366,20 @@ void correctMovementFeedback() {
 void neutralMovementFeedback() {
   
     if (instructedDirection == 0) {
-      digitalWrite(green_light_pin_0, LOW);
-      digitalWrite(blue_light_pin_0, HIGH);
+      digitalWrite(greenLed_up_npwm, LOW);
+      digitalWrite(blueLed_up_npwm, HIGH);
     }
     else if (instructedDirection == 1) {
-      digitalWrite(green_light_pin_1, LOW);
-      digitalWrite(blue_light_pin_1, HIGH);
+      digitalWrite(greenLed_down, LOW);
+      digitalWrite(blueLed_down, HIGH);
     }
     else if (instructedDirection == 2) {
-      digitalWrite(green_light_pin_2, LOW);
-      digitalWrite(blue_light_pin_2, HIGH);
+      digitalWrite(greenLed_right, LOW);
+      digitalWrite(blueLed_right_npwm, HIGH);
     }
     else if (instructedDirection == 3) {
-      digitalWrite(green_light_pin_3, LOW);
-      digitalWrite(blue_light_pin_3, HIGH);
+      digitalWrite(greenLed_left, LOW);
+      digitalWrite(blueLed_left, HIGH);
     }
 }
 
@@ -460,14 +460,14 @@ void movementDone() {
   directionsDetermined[3] = 0;
 
   /* Set all LEDs off. */
-  digitalWrite(green_light_pin_0, LOW);
-  digitalWrite(blue_light_pin_0, LOW);
-  digitalWrite(green_light_pin_1, LOW);
-  digitalWrite(blue_light_pin_1, LOW);
-  digitalWrite(green_light_pin_2, LOW);
-  digitalWrite(blue_light_pin_2, LOW);
-  digitalWrite(green_light_pin_3, LOW);
-  digitalWrite(blue_light_pin_3, LOW);
+  digitalWrite(greenLed_up_npwm, LOW);
+  digitalWrite(blueLed_up_npwm, LOW);
+  digitalWrite(greenLed_down, LOW);
+  digitalWrite(blueLed_down, LOW);
+  digitalWrite(greenLed_right, LOW);
+  digitalWrite(blueLed_right_npwm, LOW);
+  digitalWrite(greenLed_left, LOW);
+  digitalWrite(blueLed_left, LOW);
        
 }
 
@@ -531,47 +531,47 @@ void endVisualization() {
   // do some fancy blinking/circle/etc. here.
 
   // top
-  digitalWrite(blue_light_pin_0, HIGH);
+  digitalWrite(blueLed_up_npwm, HIGH);
   delay(200);
 
   // right
-  digitalWrite(blue_light_pin_2, HIGH);
-  digitalWrite(blue_light_pin_0, LOW);
+  digitalWrite(blueLed_right_npwm, HIGH);
+  digitalWrite(blueLed_up_npwm, LOW);
   delay(200);
 
   // bottom
-  digitalWrite(blue_light_pin_1, HIGH);
-  digitalWrite(blue_light_pin_2, LOW);
+  digitalWrite(blueLed_down, HIGH);
+  digitalWrite(blueLed_right_npwm, LOW);
   delay(200);
 
   // left
-  digitalWrite(blue_light_pin_3, HIGH);
-  digitalWrite(blue_light_pin_1, LOW);
+  digitalWrite(blueLed_left, HIGH);
+  digitalWrite(blueLed_down, LOW);
   delay(200);
 
   /* greens*/
 
   // top
-  digitalWrite(green_light_pin_0, HIGH);
-  digitalWrite(blue_light_pin_3, LOW);
+  digitalWrite(greenLed_up_npwm, HIGH);
+  digitalWrite(blueLed_left, LOW);
   delay(200);
 
   // right
-  digitalWrite(green_light_pin_2, HIGH);
-  digitalWrite(green_light_pin_0, LOW);
+  digitalWrite(greenLed_right, HIGH);
+  digitalWrite(greenLed_up_npwm, LOW);
   delay(200);
 
   // bottom
-  digitalWrite(green_light_pin_1, HIGH);
-  digitalWrite(green_light_pin_2, LOW);
+  digitalWrite(greenLed_down, HIGH);
+  digitalWrite(greenLed_right, LOW);
   delay(200);
 
   // left
-  digitalWrite(green_light_pin_3, HIGH);
-  digitalWrite(green_light_pin_1, LOW);
+  digitalWrite(greenLed_left, HIGH);
+  digitalWrite(greenLed_down, LOW);
   delay(200);
 
-  digitalWrite(green_light_pin_3, LOW);
+  digitalWrite(greenLed_left, LOW);
 
 }
 
