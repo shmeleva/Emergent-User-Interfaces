@@ -5,8 +5,8 @@
 
 // Variables to customize for the exercise:
 
-const float warmupDuration = 0;    // Give the duration for warmup phase in minutes
-const float exerciseDuration = 3;  // Give the duration for main exercise phase in minutes
+const float warmupDuration = 0.5;    // Give the duration for warmup phase in minutes
+const float exerciseDuration = 5;  // Give the duration for main exercise phase in minutes
 const int respiratoryRate = 7;  // Set the targeted respiratory rate
 
 
@@ -101,10 +101,9 @@ float filterOne = 0.2;  //filters for movement Y
 float filterTwo = 0.4;  //filters for movement Z
 float movementVal = 1;  //filter for total amount for movement to be determined
 boolean directionDetermined = false;
-String directionInput = "";
-String directionOutput = "";
 int userDirection = -1;
-bool instructionsGiven = true;
+bool instructionsGiven = false;
+bool directionSet = false;
 
 // Parameters for MOVEMENT INSTRUCTIONS AND FEEDBACK
 
@@ -164,7 +163,7 @@ void setup(void)
 
   bno.setExtCrystalUse(true);
 
-  Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
+  //Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
 }
 
 /* FUNCTION:  setNextDirection()
@@ -193,12 +192,14 @@ void setNextDirection() {
       next_y = temp;
     }
 
+    String directionOutput = "";
     if (0 <= nextInstruction <= 3) {
       directionOutput = directionStrings[nextInstruction];  
     }
+    Serial.print("Upcoming next: "); Serial.println(directionOutput); 
+    Serial.println(""); Serial.println("");
 
-    Serial.println("Next movement set: "); 
-    Serial.println(directionOutput);
+    directionSet = true;
 }
 
 /* FUNCTION:  giveMovementInstruction();
@@ -212,6 +213,13 @@ void giveMovementInstruction() {
   
   /* Setting the LEDs for giving the movement instructions */
   instructedDirection = nextInstruction;
+
+  /* Give instruction on monitor */
+  String directionOutput = "";
+  if (0 <= instructedDirection <= 3) {
+      directionOutput = directionStrings[instructedDirection];  
+  }
+  Serial.print("GO – "); Serial.println(directionOutput);
   
   if (instructedDirection == 0) {
     analogWrite(blue_light_pin_0, HIGH);
@@ -229,17 +237,20 @@ void giveMovementInstruction() {
     analogWrite(blue_light_pin_3, HIGH);
     analogWrite(green_light_pin_3, LOW);
   }
+
+  instructionsGiven = true;
+  directionSet = false; // the next instruction is not set yet
 }
 
 void determineDirection() {
 
   // Determine direction from largest number of movements
 
-  Serial.println("Current values:"); 
+  /*Serial.println("Current values:"); 
   for (int i = 0; i < 4; ++i) {
     Serial.println(directionsDetermined[i]);
-  }
-
+  }*/
+  String directionInput = "";
   int largestValue = 0;
   for (int i = 0; i < 4; ++i) {
 
@@ -251,8 +262,8 @@ void determineDirection() {
       directionDetermined = true;
       userDirection = i;
       
-      Serial.println("Determined direction:");
-      Serial.println(directionInput);
+      /*Serial.println("Determined direction:");
+      Serial.println(directionInput);*/
     }
   }
 
@@ -411,22 +422,21 @@ void giveMovementFeedback() {
 
   /* Change only if feedback changes */
   if (thisFeedback != latestFeedback) {
-    
+ 
     latestFeedback = thisFeedback;
 
     if (thisFeedback == 1 || thisFeedback == 0) {
       
       /* Movement is correct or semi-correct. Set LED colour green. */
-      Serial.println("Feedback: Movement is correct.");
+      Serial.println("Movement CORRECT.");
       correctMovementFeedback();
       
     } else {
 
       /* Movement is wrong. Set LED colour blue. */
-      Serial.println("Feedback: Movement is wrong.");
+      Serial.println("Movement WRONG.");
       neutralMovementFeedback();
     }
-    Serial.println("");
   }
 }
 
@@ -437,10 +447,11 @@ void giveMovementFeedback() {
 void movementDone() {
   
   /* Movement input values from user to zero. */
+  Serial.println("Movement finished."); 
+  Serial.println(""); Serial.println(""); Serial.println("");
   movement[0] = 0;
   movement[1] = 0;
   movement[2] = 0;
-  directionInput = "";
   directionDetermined = false;
   instructionsGiven = false;
   directionsDetermined[0] = 0;
@@ -460,58 +471,6 @@ void movementDone() {
        
 }
 
-/*  FUNCTION  endVisualization()
- *
- *   Creates a visualization in the end of the exercise with the LEDs.
-*/
-void endVisualization() {
-  // do some fancy blinking/circle/etc. here.
-
-  // top
-  analogWrite(blue_light_pin_0, HIGH);
-  delay(200);
-
-  // right
-  analogWrite(blue_light_pin_2, HIGH);
-  analogWrite(blue_light_pin_0, LOW);
-  delay(500);
-
-  // bottom
-  analogWrite(blue_light_pin_1, HIGH);
-  analogWrite(blue_light_pin_2, LOW);
-  delay(500);
-
-  // left
-  analogWrite(blue_light_pin_3, HIGH);
-  analogWrite(blue_light_pin_1, LOW);
-  delay(500);
-
-  /* greens*/
-
-  // top
-  analogWrite(green_light_pin_0, HIGH);
-  analogWrite(blue_light_pin_3, LOW);
-  delay(500);
-
-  // right
-  analogWrite(green_light_pin_2, HIGH);
-  analogWrite(green_light_pin_0, LOW);
-  delay(500);
-
-  // bottom
-  analogWrite(green_light_pin_1, HIGH);
-  analogWrite(green_light_pin_2, LOW);
-  delay(500);
-
-  // left
-  analogWrite(green_light_pin_3, HIGH);
-  analogWrite(green_light_pin_1, LOW);
-  delay(500);
-
-  analogWrite(green_light_pin_3, LOW);
-
-}
-
 /*  FUNCTION  movementLoop()
  *   
  *   The event loop for 
@@ -522,14 +481,13 @@ void endVisualization() {
 void movementLoop() {
 
   /* Set the next instructions already during the previous one. */
-  if (instructionsGiven) {
+  if (!directionSet && instructionsGiven) {
     setNextDirection();
   }
 
   /* Give instructions once. */
-  if (!instructionsGiven) {
+  if (!instructionsGiven && directionSet) {
     giveMovementInstruction();
-    instructionsGiven = true;
   }
 
   readMovementInput();
@@ -563,6 +521,58 @@ void checkButton() {
       continueExercise = true;
     }
   }
+}
+
+/*  FUNCTION  endVisualization()
+ *
+ *   Creates a visualization in the end of the exercise with the LEDs.
+*/
+void endVisualization() {
+  // do some fancy blinking/circle/etc. here.
+
+  // top
+  analogWrite(blue_light_pin_0, HIGH);
+  delay(200);
+
+  // right
+  analogWrite(blue_light_pin_2, HIGH);
+  analogWrite(blue_light_pin_0, LOW);
+  delay(200);
+
+  // bottom
+  analogWrite(blue_light_pin_1, HIGH);
+  analogWrite(blue_light_pin_2, LOW);
+  delay(200);
+
+  // left
+  analogWrite(blue_light_pin_3, HIGH);
+  analogWrite(blue_light_pin_1, LOW);
+  delay(200);
+
+  /* greens*/
+
+  // top
+  analogWrite(green_light_pin_0, HIGH);
+  analogWrite(blue_light_pin_3, LOW);
+  delay(200);
+
+  // right
+  analogWrite(green_light_pin_2, HIGH);
+  analogWrite(green_light_pin_0, LOW);
+  delay(200);
+
+  // bottom
+  analogWrite(green_light_pin_1, HIGH);
+  analogWrite(green_light_pin_2, LOW);
+  delay(200);
+
+  // left
+  analogWrite(green_light_pin_3, HIGH);
+  analogWrite(green_light_pin_1, LOW);
+  delay(200);
+
+  analogWrite(green_light_pin_3, LOW);
+
 }
 
 /* FUNCTION resetExercise()
@@ -605,6 +615,9 @@ void loop() {
 
     Serial.println("Starting exercise.");
     Serial.println("");
+
+    setNextDirection(); // set first direction
+    
     startOfExercise = false;
     warmupPhase = true; // Not redundant!
 
@@ -684,7 +697,7 @@ void loop() {
   /*
    *  ENDING THE WARMUP
   */
-  if (warmupCounter >= warmupLength && warmupPhase == true) {
+  if (warmupCounter >= warmupLength && warmupPhase == true && continueExercise) {
     
     warmupPhase = false;
     /* Doing a short pause between the warmup and main exercise starting. */
