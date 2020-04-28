@@ -5,9 +5,9 @@
 
 // Variables to customize for the exercise:
 
-const int warmupDuration = 1;    // Give the duration for warmup phase in minutes
-const int exerciseDuration = 2;  // Give the duration for main exercise phase in minutes
-const int respiratoryRate = 4;  // Set the targeted respiratory rate
+const float warmupDuration = 0;    // Give the duration for warmup phase in minutes
+const float exerciseDuration = 3;  // Give the duration for main exercise phase in minutes
+const int respiratoryRate = 7;  // Set the targeted respiratory rate
 
 
 // ----------- VIBRATION MOTORS -----------
@@ -38,7 +38,7 @@ const int blue_light_pin_3 = 10;
 /*  Some of the LEDs are not in the PWM pins. (Not enough of them for this use).
  *  Thus we cannot use other values than HIGH (255) or LOW (0)
 */
-const int brightness = 255;
+//const int brightness = 255;
 
 // ----------- BUTTON ---------------------
 const int buttonPin = 12; 
@@ -88,7 +88,7 @@ int exerciseCounter = 0;
  *  c = 0.001 because we want to result in seconds instead of millisecond
  */
 const int pause = 200;                // The break between inhale and exhale (milliseconds)
-const int minFrq = 50;                // Min value of vibration frequency
+const int minFrq = 60;                // Min value of vibration frequency
 const int fadeStep = (255-minFrq)/((60/respiratoryRate + pause*0.001)/0.2);
 
 
@@ -226,16 +226,20 @@ void giveMovementInstruction() {
   
   /* Setting the LEDs for giving the movement instructions */
   if (instructedDirection == 0) {
-    analogWrite(blue_light_pin_0, brightness);
+    analogWrite(blue_light_pin_0, HIGH);
+    analogWrite(green_light_pin_0, LOW);
   }
   else if (instructedDirection == 1) {
-    analogWrite(blue_light_pin_1, brightness);
+    analogWrite(blue_light_pin_1, HIGH);
+    analogWrite(green_light_pin_1, LOW);
   }
   else if (instructedDirection == 2) {
-    analogWrite(blue_light_pin_2, brightness);
+    analogWrite(blue_light_pin_2, HIGH);
+    analogWrite(green_light_pin_2, LOW);
   }
   else if (instructedDirection == 3) {
-    analogWrite(blue_light_pin_3, brightness);
+    analogWrite(blue_light_pin_3, HIGH);
+    analogWrite(green_light_pin_3, LOW);
   }
 }
 
@@ -357,20 +361,20 @@ void readMovementInput(){
 void correctMovementFeedback() {
   
     if (instructedDirection == 0) {
-      analogWrite(green_light_pin_0, brightness);
-      analogWrite(blue_light_pin_0, 0);
+      analogWrite(green_light_pin_0, HIGH);
+      analogWrite(blue_light_pin_0, LOW);
     }
     else if (instructedDirection == 1) {
-      analogWrite(green_light_pin_1, brightness);
+      analogWrite(green_light_pin_1, HIGH);
       analogWrite(blue_light_pin_1, 0);
     }
     else if (instructedDirection == 2) {
-      analogWrite(green_light_pin_2, brightness);
-      analogWrite(blue_light_pin_2, 0);
+      analogWrite(green_light_pin_2, HIGH);
+      analogWrite(blue_light_pin_2, LOW);
     }
     else if (instructedDirection == 3) {
-      analogWrite(green_light_pin_3, brightness);
-      analogWrite(blue_light_pin_3, 0);
+      analogWrite(green_light_pin_3, HIGH);
+      analogWrite(blue_light_pin_3, LOW);
     }
 }
 
@@ -378,20 +382,20 @@ void correctMovementFeedback() {
 void neutralMovementFeedback() {
   
     if (instructedDirection == 0) {
-      analogWrite(green_light_pin_0, 0);
-      analogWrite(blue_light_pin_0, brightness);
+      analogWrite(green_light_pin_0, LOW);
+      analogWrite(blue_light_pin_0, HIGH);
     }
     else if (instructedDirection == 1) {
-      analogWrite(green_light_pin_1, 0);
-      analogWrite(blue_light_pin_1, brightness);
+      analogWrite(green_light_pin_1, LOW);
+      analogWrite(blue_light_pin_1, HIGH);
     }
     else if (instructedDirection == 2) {
-      analogWrite(green_light_pin_2, 0);
-      analogWrite(blue_light_pin_2, brightness);
+      analogWrite(green_light_pin_2, LOW);
+      analogWrite(blue_light_pin_2, HIGH);
     }
     else if (instructedDirection == 3) {
-      analogWrite(green_light_pin_3, 0);
-      analogWrite(blue_light_pin_3, brightness);
+      analogWrite(green_light_pin_3, LOW);
+      analogWrite(blue_light_pin_3, HIGH);
     }
 }
 
@@ -408,7 +412,6 @@ void giveMovementFeedback() {
   //Serial.println(instructedDirection);
   //Serial.print("Actual movement: ");
   //Serial.println(userDirection);
-  Serial.println("Feedback: ");
 
   int thisFeedback = -1;
  
@@ -441,18 +444,17 @@ void giveMovementFeedback() {
     if (thisFeedback == 1 || thisFeedback == 0) {
       
       /* Movement is correct or semi-correct. Set LED colour green. */
-      Serial.println("Movement is correct.");
+      Serial.println("Feedback: Movement is correct.");
       correctMovementFeedback();
       
     } else {
 
       /* Movement is wrong. Set LED colour blue. */
-      Serial.println("Movement is wrong.");
+      Serial.println("Feedback: Movement is wrong.");
       neutralMovementFeedback();
     }
+    Serial.println("");
   }
-    
-  Serial.println("");
 }
 
 /* FUNCTION movementDone()
@@ -474,14 +476,14 @@ void movementDone() {
   directionsDetermined[3] = 0;
 
   /* Set all LEDs off. */
-  analogWrite(green_light_pin_0, 0);
-  analogWrite(blue_light_pin_0, 0);
-  analogWrite(green_light_pin_1, 0);
-  analogWrite(blue_light_pin_1, 0);
-  analogWrite(green_light_pin_2, 0);
-  analogWrite(blue_light_pin_2, 0);
-  analogWrite(green_light_pin_3, 0);
-  analogWrite(blue_light_pin_3, 0);
+  analogWrite(green_light_pin_0, LOW);
+  analogWrite(blue_light_pin_0, LOW);
+  analogWrite(green_light_pin_1, LOW);
+  analogWrite(blue_light_pin_1, LOW);
+  analogWrite(green_light_pin_2, LOW);
+  analogWrite(blue_light_pin_2, LOW);
+  analogWrite(green_light_pin_3, LOW);
+  analogWrite(blue_light_pin_3, LOW);
        
 }
 
@@ -494,7 +496,7 @@ void endVisualization() {
 
   // top
   analogWrite(blue_light_pin_0, HIGH);
-  delay(500);
+  delay(200);
 
   // right
   analogWrite(blue_light_pin_2, HIGH);
@@ -605,7 +607,10 @@ void resetExercise() {
  *  
 */
 void finishExercise() {
-  
+
+  Serial.println("Finishing exercise.");
+  Serial.println("");
+  movementDone();
   analogWrite(vibration_motor, 0);
   if (warmupPhase == false) endVisualization();
   startOfExercise = true;
@@ -686,6 +691,8 @@ void loop() {
       delay(100);
     }
 
+    analogWrite(vibration_motor, 0);
+
     /* Counting rounds for warmup and main exercise. */
     if (warmupPhase == true) {
       warmupCounter += 1;
@@ -699,24 +706,23 @@ void loop() {
   /*
    *  ENDING THE WARMUP
   */
-  if (warmupCounter >= warmupLength) {
+  if (warmupCounter >= warmupLength && warmupPhase == true) {
     
     warmupPhase = false;
     /* Doing a short pause between the warmup and main exercise starting. */
     Serial.println("Warmup is finished.");
     Serial.println("");
     delay(2000);
+    endVisualization();
     // TODO: could play some LED vis
   }
   /*
    *  ENDING THE MAIN EXERCISE
   */  
-  if (exerciseCounter >= exerciseLength) {
+  if (exerciseCounter >= exerciseLength && continueExercise == true) {
 
     /* continueExercise variable takes care that we are not doing the breathing/movement 
     instructions if exercisecounter is maxed out! */
-    Serial.println("Finishing exercise.");
-    Serial.println("");
     continueExercise = false;
     finishExercise();
   }
