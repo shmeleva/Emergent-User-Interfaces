@@ -20,16 +20,16 @@ Adafruit_BNO055 bno = Adafruit_BNO055();
 // ----------- LED LIGHTS -----------------
 
 // Up
-const int green_light_pin_0 = 2; // non PWM pin
-const int blue_light_pin_0 = 4;
+const int green_light_pin_0 = 2; // non PWM pin - use digitalWrite() HIGH/LOW
+const int blue_light_pin_0 = 4;  // non PWM pin - use digitalWrite() HIGH/LOW
 
 // Down
-const int green_light_pin_1 = 3; // non PWM pin
+const int green_light_pin_1 = 3;
 const int blue_light_pin_1 = 6;
 
 // Right
 const int green_light_pin_2 = 5;
-const int blue_light_pin_2 = 7; // non PWM pin
+const int blue_light_pin_2 = 7; // non PWM pin - use digitalWrite() HIGH/LOW
 
 // Left
 const int green_light_pin_3 = 9;
@@ -38,7 +38,7 @@ const int blue_light_pin_3 = 10;
 /*  Some of the LEDs are not in the PWM pins. (Not enough of them for this use).
  *  Thus we cannot use other values than HIGH (255) or LOW (0)
 */
-//const int brightness = 255;
+const int brightness = 255;
 
 // ----------- BUTTON ---------------------
 const int buttonPin = 12; 
@@ -222,20 +222,20 @@ void giveMovementInstruction() {
   Serial.print("GO – "); Serial.println(directionOutput);
   
   if (instructedDirection == 0) {
-    analogWrite(blue_light_pin_0, HIGH);
-    analogWrite(green_light_pin_0, LOW);
+    digitalWrite(blue_light_pin_0, HIGH);
+    digitalWrite(green_light_pin_0, LOW);
   }
   else if (instructedDirection == 1) {
-    analogWrite(blue_light_pin_1, HIGH);
-    analogWrite(green_light_pin_1, LOW);
+    digitalWrite(blue_light_pin_1, HIGH);
+    digitalWrite(green_light_pin_1, LOW);
   }
   else if (instructedDirection == 2) {
-    analogWrite(blue_light_pin_2, HIGH);
-    analogWrite(green_light_pin_2, LOW);
+    digitalWrite(blue_light_pin_2, HIGH);
+    digitalWrite(green_light_pin_2, LOW);
   }
   else if (instructedDirection == 3) {
-    analogWrite(blue_light_pin_3, HIGH);
-    analogWrite(green_light_pin_3, LOW);
+    digitalWrite(blue_light_pin_3, HIGH);
+    digitalWrite(green_light_pin_3, LOW);
   }
 
   instructionsGiven = true;
@@ -345,20 +345,20 @@ void readMovementInput(){
 void correctMovementFeedback() {
   
     if (instructedDirection == 0) {
-      analogWrite(green_light_pin_0, HIGH);
-      analogWrite(blue_light_pin_0, LOW);
+      digitalWrite(green_light_pin_0, HIGH);
+      digitalWrite(blue_light_pin_0, LOW);
     }
     else if (instructedDirection == 1) {
-      analogWrite(green_light_pin_1, HIGH);
-      analogWrite(blue_light_pin_1, 0);
+      digitalWrite(green_light_pin_1, HIGH);
+      digitalWrite(blue_light_pin_1, LOW);
     }
     else if (instructedDirection == 2) {
-      analogWrite(green_light_pin_2, HIGH);
-      analogWrite(blue_light_pin_2, LOW);
+      digitalWrite(green_light_pin_2, HIGH);
+      digitalWrite(blue_light_pin_2, LOW);
     }
     else if (instructedDirection == 3) {
-      analogWrite(green_light_pin_3, HIGH);
-      analogWrite(blue_light_pin_3, LOW);
+      digitalWrite(green_light_pin_3, HIGH);
+      digitalWrite(blue_light_pin_3, LOW);
     }
 }
 
@@ -366,20 +366,20 @@ void correctMovementFeedback() {
 void neutralMovementFeedback() {
   
     if (instructedDirection == 0) {
-      analogWrite(green_light_pin_0, LOW);
-      analogWrite(blue_light_pin_0, HIGH);
+      digitalWrite(green_light_pin_0, LOW);
+      digitalWrite(blue_light_pin_0, HIGH);
     }
     else if (instructedDirection == 1) {
-      analogWrite(green_light_pin_1, LOW);
-      analogWrite(blue_light_pin_1, HIGH);
+      digitalWrite(green_light_pin_1, LOW);
+      digitalWrite(blue_light_pin_1, HIGH);
     }
     else if (instructedDirection == 2) {
-      analogWrite(green_light_pin_2, LOW);
-      analogWrite(blue_light_pin_2, HIGH);
+      digitalWrite(green_light_pin_2, LOW);
+      digitalWrite(blue_light_pin_2, HIGH);
     }
     else if (instructedDirection == 3) {
-      analogWrite(green_light_pin_3, LOW);
-      analogWrite(blue_light_pin_3, HIGH);
+      digitalWrite(green_light_pin_3, LOW);
+      digitalWrite(blue_light_pin_3, HIGH);
     }
 }
 
@@ -460,14 +460,14 @@ void movementDone() {
   directionsDetermined[3] = 0;
 
   /* Set all LEDs off. */
-  analogWrite(green_light_pin_0, LOW);
-  analogWrite(blue_light_pin_0, LOW);
-  analogWrite(green_light_pin_1, LOW);
-  analogWrite(blue_light_pin_1, LOW);
-  analogWrite(green_light_pin_2, LOW);
-  analogWrite(blue_light_pin_2, LOW);
-  analogWrite(green_light_pin_3, LOW);
-  analogWrite(blue_light_pin_3, LOW);
+  digitalWrite(green_light_pin_0, LOW);
+  digitalWrite(blue_light_pin_0, LOW);
+  digitalWrite(green_light_pin_1, LOW);
+  digitalWrite(blue_light_pin_1, LOW);
+  digitalWrite(green_light_pin_2, LOW);
+  digitalWrite(blue_light_pin_2, LOW);
+  digitalWrite(green_light_pin_3, LOW);
+  digitalWrite(blue_light_pin_3, LOW);
        
 }
 
@@ -531,47 +531,47 @@ void endVisualization() {
   // do some fancy blinking/circle/etc. here.
 
   // top
-  analogWrite(blue_light_pin_0, HIGH);
+  digitalWrite(blue_light_pin_0, HIGH);
   delay(200);
 
   // right
-  analogWrite(blue_light_pin_2, HIGH);
-  analogWrite(blue_light_pin_0, LOW);
+  digitalWrite(blue_light_pin_2, HIGH);
+  digitalWrite(blue_light_pin_0, LOW);
   delay(200);
 
   // bottom
-  analogWrite(blue_light_pin_1, HIGH);
-  analogWrite(blue_light_pin_2, LOW);
+  digitalWrite(blue_light_pin_1, HIGH);
+  digitalWrite(blue_light_pin_2, LOW);
   delay(200);
 
   // left
-  analogWrite(blue_light_pin_3, HIGH);
-  analogWrite(blue_light_pin_1, LOW);
+  digitalWrite(blue_light_pin_3, HIGH);
+  digitalWrite(blue_light_pin_1, LOW);
   delay(200);
 
   /* greens*/
 
   // top
-  analogWrite(green_light_pin_0, HIGH);
-  analogWrite(blue_light_pin_3, LOW);
+  digitalWrite(green_light_pin_0, HIGH);
+  digitalWrite(blue_light_pin_3, LOW);
   delay(200);
 
   // right
-  analogWrite(green_light_pin_2, HIGH);
-  analogWrite(green_light_pin_0, LOW);
+  digitalWrite(green_light_pin_2, HIGH);
+  digitalWrite(green_light_pin_0, LOW);
   delay(200);
 
   // bottom
-  analogWrite(green_light_pin_1, HIGH);
-  analogWrite(green_light_pin_2, LOW);
+  digitalWrite(green_light_pin_1, HIGH);
+  digitalWrite(green_light_pin_2, LOW);
   delay(200);
 
   // left
-  analogWrite(green_light_pin_3, HIGH);
-  analogWrite(green_light_pin_1, LOW);
+  digitalWrite(green_light_pin_3, HIGH);
+  digitalWrite(green_light_pin_1, LOW);
   delay(200);
 
-  analogWrite(green_light_pin_3, LOW);
+  digitalWrite(green_light_pin_3, LOW);
 
 }
 
