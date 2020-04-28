@@ -620,8 +620,7 @@ void loop() {
     
     startOfExercise = false;
     warmupPhase = true; // Not redundant!
-
-    // TODO: You can play nice led show here. Otherwise this block is useless.
+    
   }
   if (warmupPhase && continueExercise) {
     Serial.print("Warmup round, rounds left: ");
@@ -705,7 +704,7 @@ void loop() {
     Serial.println("");
     delay(2000);
     endVisualization();
-    // TODO: could play some LED vis
+    
   }
   /*
    *  ENDING THE MAIN EXERCISE
